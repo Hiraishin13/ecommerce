@@ -1,0 +1,21 @@
+CREATE TABLE IF NOT EXISTS products (
+    id              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    category_id     INT UNSIGNED             DEFAULT NULL,
+    name            VARCHAR(200)  NOT NULL,
+    slug            VARCHAR(220)  NOT NULL UNIQUE,
+    description     TEXT                     DEFAULT NULL,
+    price           DECIMAL(10,2) NOT NULL,
+    compare_price   DECIMAL(10,2)            DEFAULT NULL,
+    stock           INT UNSIGNED  NOT NULL   DEFAULT 0,
+    sku             VARCHAR(100)             DEFAULT NULL UNIQUE,
+    images          JSON                     DEFAULT NULL,
+    is_active       TINYINT(1)    NOT NULL   DEFAULT 1,
+    is_featured     TINYINT(1)    NOT NULL   DEFAULT 0,
+    weight          DECIMAL(8,3)             DEFAULT NULL,
+    meta_title      VARCHAR(200)             DEFAULT NULL,
+    meta_desc       VARCHAR(500)             DEFAULT NULL,
+    created_at      DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL,
+    FULLTEXT KEY ft_products (name, description)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

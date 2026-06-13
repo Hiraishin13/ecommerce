@@ -1,0 +1,11 @@
+Options -Indexes
+RewriteEngine On
+
+# Allow CORS preflight
+RewriteCond %{REQUEST_METHOD} OPTIONS
+RewriteRule ^ - [L,R=200]
+
+# Redirect everything to index.php
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.php [L,QSA]
