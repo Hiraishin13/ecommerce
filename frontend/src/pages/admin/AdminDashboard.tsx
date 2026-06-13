@@ -20,15 +20,19 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     api
-      .get<{ orders: Order[]; total: number }>('/admin/orders?limit=10')
-      .then((res) => setOrders(res.data.orders ?? []))
+      .get('/admin/orders?limit=10')
+      .then((res) => {
+        const payload = res.data
+        const list: Order[] = payload?.orders ?? (Array.isArray(payload) ? payload : [])
+        setOrders(list)
+      })
       .catch(() => setOrders([]))
       .finally(() => setLoading(false))
   }, [])
 
   const totalRevenue = orders
     .filter((o) => o.status !== 'cancelled')
-    .reduce((sum, o) => sum + o.total, 0)
+    .reduce((sum, o) => sum + (o.total ?? 0), 0)
 
   const kpis: KPI[] = [
     {
@@ -105,7 +109,7 @@ export default function AdminDashboard() {
               <tbody>
                 {orders.slice(0, 10).map((order) => (
                   <tr key={order.id} className="border-t border-accent hover:bg-[#FAFAFA] transition-colors">
-                    <td className="px-4 py-3 font-bold text-xs">#{order.order_number}</td>
+                    <td className="px-4 py-3 font-bold text-xs">#{order.order_number ?? order.id}</td>
                     <td className="px-4 py-3 text-xs text-muted">
                       {new Date(order.created_at).toLocaleDateString('en-GB')}
                     </td>
@@ -113,7 +117,7 @@ export default function AdminDashboard() {
                       <OrderStatusBadge status={order.status} />
                     </td>
                     <td className="px-4 py-3 text-right font-bold text-xs">
-                      {formatPrice(order.total)}
+                      {formatPrice(order.total ?? 0)}
                     </td>
                     <td className="px-4 py-3 text-right">
                       <Link

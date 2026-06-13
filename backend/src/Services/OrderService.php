@@ -25,10 +25,37 @@ class OrderService
     /**
      * @param int   $userId
      * @param array $shippingData  {name, email, phone?, address, city, zip, country?, notes?}
+     * @param array $requestItems  Optional items from frontend [{product_id, quantity}]
      */
-    public function createOrder(int $userId, array $shippingData): array
+    public function createOrder(int $userId, array $shippingData, array $requestItems = []): array
     {
-        $cartItems = $this->cart->getByUser($userId);
+        if (!empty($requestItems)) {
+            $productIds = array_values(array_unique(array_map(
+                fn($i) => (int) ($i['product_id'] ?? 0),
+                $requestItems
+            )));
+            $products = $this->products->findByIds(array_filter($productIds));
+            $cartItems = [];
+            foreach ($requestItems as $item) {
+                $pid = (int) ($item['product_id'] ?? 0);
+                $qty = (int) ($item['quantity'] ?? 0);
+                if ($pid <= 0 || $qty <= 0 || !isset($products[$pid])) {
+                    continue;
+                }
+                $p = $products[$pid];
+                $cartItems[] = [
+                    'product_id' => $pid,
+                    'name'       => $p['name'],
+                    'sku'        => $p['sku'],
+                    'price'      => $p['price'],
+                    'quantity'   => $qty,
+                    'stock'      => $p['stock'],
+                    'is_active'  => $p['is_active'],
+                ];
+            }
+        } else {
+            $cartItems = $this->cart->getByUser($userId);
+        }
 
         if (empty($cartItems)) {
             throw new RuntimeException('Cart is empty.', 400);

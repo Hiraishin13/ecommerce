@@ -37,7 +37,7 @@ export default function AdminCustomersPage() {
   useEffect(() => {
     setLoading(true)
     api
-      .get<PaginatedCustomers>('/admin/customers', {
+      .get<PaginatedCustomers>('/admin/users', {
         params: { page, search: debouncedSearch || undefined },
       })
       .then((res) => {

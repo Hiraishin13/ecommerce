@@ -125,6 +125,25 @@ class ProductModel extends Model
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
+    /** Returns assoc array keyed by product id */
+    public function findByIds(array $ids): array
+    {
+        if (empty($ids)) {
+            return [];
+        }
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $stmt = $this->db->prepare(
+            "SELECT id, name, sku, price, stock, is_active FROM products WHERE id IN ($placeholders)"
+        );
+        $stmt->execute($ids);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $indexed = [];
+        foreach ($rows as $row) {
+            $indexed[(int) $row['id']] = $row;
+        }
+        return $indexed;
+    }
+
     public function create(array $data): int
     {
         $stmt = $this->db->prepare(

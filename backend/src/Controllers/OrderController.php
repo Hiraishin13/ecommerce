@@ -76,6 +76,8 @@ class OrderController extends Controller
             $response->error('Required shipping fields are missing.', 422);
         }
 
+        $requestItems = $data['items'] ?? [];
+
         try {
             $order = $this->orderService->createOrder($userId, [
                 'name'    => $name,
@@ -86,7 +88,7 @@ class OrderController extends Controller
                 'zip'     => $zip,
                 'country' => $country,
                 'notes'   => $data['notes'] ?? null,
-            ]);
+            ], $requestItems);
 
             $response->success(['order' => $order], 'Order created successfully.', 201);
         } catch (RuntimeException $e) {

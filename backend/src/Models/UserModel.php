@@ -104,22 +104,23 @@ class UserModel extends Model
 
     public function findAll(int $limit = 20, int $offset = 0, string $search = ''): array
     {
+        $orderCount = '(SELECT COUNT(*) FROM orders WHERE orders.user_id = users.id) AS orders_count';
         if ($search !== '') {
             $stmt = $this->db->prepare(
-                'SELECT id, name, email, role, email_verified, avatar, created_at
+                "SELECT id, name, email, role, email_verified, avatar, created_at, $orderCount
                  FROM users
                  WHERE name LIKE ? OR email LIKE ?
                  ORDER BY created_at DESC
-                 LIMIT ? OFFSET ?'
+                 LIMIT ? OFFSET ?"
             );
             $like = '%' . $search . '%';
             $stmt->execute([$like, $like, $limit, $offset]);
         } else {
             $stmt = $this->db->prepare(
-                'SELECT id, name, email, role, email_verified, avatar, created_at
+                "SELECT id, name, email, role, email_verified, avatar, created_at, $orderCount
                  FROM users
                  ORDER BY created_at DESC
-                 LIMIT ? OFFSET ?'
+                 LIMIT ? OFFSET ?"
             );
             $stmt->execute([$limit, $offset]);
         }

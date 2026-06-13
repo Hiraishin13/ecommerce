@@ -7,6 +7,7 @@ import { Check } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { orderService } from '../../services/order.service'
 import { useCartStore } from '../../store/cartStore'
+import { useAuthStore } from '../../store/authStore'
 import { formatPrice } from '../../utils/formatPrice'
 import Input from '../../components/ui/Input'
 import Button from '../../components/ui/Button'
@@ -40,6 +41,7 @@ export default function CheckoutPage() {
   const [placing, setPlacing] = useState(false)
 
   const { items, total, clearCart } = useCartStore()
+  const { user } = useAuthStore()
   const navigate = useNavigate()
 
   const cartTotal = total()
@@ -62,8 +64,15 @@ export default function CheckoutPage() {
     setPlacing(true)
     try {
       const order = await orderService.createOrder({
-        shipping_address: shippingAddress,
+        shipping_name: `${shippingAddress.first_name} ${shippingAddress.last_name}`,
+        shipping_email: user?.email ?? '',
+        shipping_phone: shippingAddress.phone,
+        shipping_address: shippingAddress.address,
+        shipping_city: shippingAddress.city,
+        shipping_zip: shippingAddress.postal_code,
+        shipping_country: shippingAddress.country,
         payment_method: 'cash_on_delivery',
+        items: items.map((i) => ({ product_id: i.productId, quantity: i.quantity })),
       })
       clearCart()
       navigate(`/order-success/${order.id}`)

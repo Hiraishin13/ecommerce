@@ -63,6 +63,10 @@ class OrderModel extends Model
     {
         $stmt = $this->db->prepare(
             "SELECT o.*,
+                    o.total_amount AS total,
+                    o.total_amount AS subtotal,
+                    0 AS discount,
+                    0 AS shipping_fee,
                     CONCAT('ORD-', LPAD(o.id, 5, '0')) AS order_number,
                     u.name AS user_name, u.email AS user_email
              FROM orders o
@@ -95,7 +99,12 @@ class OrderModel extends Model
     public function findByUser(int $userId, int $limit = 20, int $offset = 0): array
     {
         $stmt = $this->db->prepare(
-            "SELECT *, CONCAT('ORD-', LPAD(id, 5, '0')) AS order_number
+            "SELECT *,
+                    total_amount AS total,
+                    total_amount AS subtotal,
+                    0 AS discount,
+                    0 AS shipping_fee,
+                    CONCAT('ORD-', LPAD(id, 5, '0')) AS order_number
              FROM orders
              WHERE user_id = ?
              ORDER BY created_at DESC
@@ -116,7 +125,12 @@ class OrderModel extends Model
     {
         if ($status !== '') {
             $stmt = $this->db->prepare(
-                "SELECT o.*, CONCAT('ORD-', LPAD(o.id, 5, '0')) AS order_number,
+                "SELECT o.*,
+                        o.total_amount AS total,
+                        o.total_amount AS subtotal,
+                        0 AS discount,
+                        0 AS shipping_fee,
+                        CONCAT('ORD-', LPAD(o.id, 5, '0')) AS order_number,
                         u.name AS user_name, u.email AS user_email
                  FROM orders o
                  LEFT JOIN users u ON u.id = o.user_id
@@ -127,7 +141,12 @@ class OrderModel extends Model
             $stmt->execute([$status, $limit, $offset]);
         } else {
             $stmt = $this->db->prepare(
-                "SELECT o.*, CONCAT('ORD-', LPAD(o.id, 5, '0')) AS order_number,
+                "SELECT o.*,
+                        o.total_amount AS total,
+                        o.total_amount AS subtotal,
+                        0 AS discount,
+                        0 AS shipping_fee,
+                        CONCAT('ORD-', LPAD(o.id, 5, '0')) AS order_number,
                         u.name AS user_name, u.email AS user_email
                  FROM orders o
                  LEFT JOIN users u ON u.id = o.user_id

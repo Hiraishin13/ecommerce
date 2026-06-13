@@ -78,6 +78,7 @@ VALUES
     1, 1
 ),
 (
+
     (SELECT id FROM categories WHERE slug='home-garden' LIMIT 1),
     'Ergonomic Office Chair',
     'ergonomic-office-chair',

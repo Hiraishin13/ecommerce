@@ -44,6 +44,11 @@ export interface Order {
   updated_at: string
 }
 
+export interface OrderItemPayload {
+  product_id: number
+  quantity: number
+}
+
 export interface CreateOrderPayload {
   shipping_name: string
   shipping_email: string
@@ -54,6 +59,7 @@ export interface CreateOrderPayload {
   shipping_country: string
   payment_method: string
   notes?: string
+  items?: OrderItemPayload[]
 }
 
 export interface PaginatedOrders {
