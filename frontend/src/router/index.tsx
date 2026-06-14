@@ -8,6 +8,7 @@ import Navbar from '../components/layout/Navbar'
 import Footer from '../components/layout/Footer'
 import AccountLayout from '../components/layout/AccountLayout'
 import AdminLayout from '../components/layout/AdminLayout'
+import SuperAdminLayout from '../components/layout/SuperAdminLayout'
 
 // Public pages
 const HomePage           = lazy(() => import('../pages/HomePage'))
@@ -40,16 +41,30 @@ const AdminCustomersPage      = lazy(() => import('../pages/admin/AdminCustomers
 const AdminCustomerDetailPage = lazy(() => import('../pages/admin/AdminCustomerDetailPage'))
 const AdminCategoriesPage     = lazy(() => import('../pages/admin/AdminCategoriesPage'))
 const AdminAnalyticsPage      = lazy(() => import('../pages/admin/AdminAnalyticsPage'))
+const AdminSettingsPage       = lazy(() => import('../pages/admin/AdminSettingsPage'))
+const AdminMembersPage        = lazy(() => import('../pages/admin/AdminMembersPage'))
 const PosPage                 = lazy(() => import('../pages/admin/pos/PosPage'))
 
-// ── Variants page ──────────────────────────────────────────────────────────
+// SuperAdmin pages
+const SuperAdminDashboard        = lazy(() => import('../pages/superadmin/SuperAdminDashboard'))
+const SuperAdminTenantsPage      = lazy(() => import('../pages/superadmin/SuperAdminTenantsPage'))
+const SuperAdminTenantDetailPage = lazy(() => import('../pages/superadmin/SuperAdminTenantDetailPage'))
+const SuperAdminPlansPage        = lazy(() => import('../pages/superadmin/SuperAdminPlansPage'))
+const SuperAdminInvoicesPage     = lazy(() => import('../pages/superadmin/SuperAdminInvoicesPage'))
+const SuperAdminActivityPage     = lazy(() => import('../pages/superadmin/SuperAdminActivityPage'))
+
+// Admin Boutique extra pages
+const AdminSubscriptionPage = lazy(() => import('../pages/admin/AdminSubscriptionPage'))
+
+// SaaS pages
+const SignupPage = lazy(() => import('../pages/saas/SignupPage'))
+
+// ── Variants ───────────────────────────────────────────────────────────────
 const pageVariants = {
   initial:  { opacity: 0, y: 10 },
   animate:  { opacity: 1, y: 0  },
 }
 const pageTransition = { duration: 0.22, ease: [0.25, 0.1, 0.25, 1] as const }
-
-// ── Layouts ────────────────────────────────────────────────────────────────
 
 function MainLayout({ children }: { children: ReactNode }) {
   const { pathname } = useLocation()
@@ -79,8 +94,6 @@ function PageFallback() {
   )
 }
 
-// ── Router ─────────────────────────────────────────────────────────────────
-
 export default function AppRouter() {
   return (
     <Suspense fallback={<PageFallback />}>
@@ -97,34 +110,22 @@ export default function AppRouter() {
         <Route path="/register"        element={<MainLayout><RegisterPage /></MainLayout>} />
         <Route path="/forgot-password" element={<MainLayout><ForgotPasswordPage /></MainLayout>} />
 
+        {/* SaaS Signup (standalone — no Navbar/Footer) */}
+        <Route path="/signup" element={<SignupPage />} />
+
         {/* Checkout (protected) */}
         <Route
           path="/checkout"
-          element={
-            <ProtectedRoute>
-              <MainLayout><CheckoutPage /></MainLayout>
-            </ProtectedRoute>
-          }
+          element={<ProtectedRoute><MainLayout><CheckoutPage /></MainLayout></ProtectedRoute>}
         />
         <Route
           path="/order-success/:id"
-          element={
-            <ProtectedRoute>
-              <MainLayout><OrderSuccessPage /></MainLayout>
-            </ProtectedRoute>
-          }
+          element={<ProtectedRoute><MainLayout><OrderSuccessPage /></MainLayout></ProtectedRoute>}
         />
 
         {/* Account (protected) */}
-        <Route
-          path="/account"
-          element={
-            <ProtectedRoute>
-              <AccountLayout />
-            </ProtectedRoute>
-          }
-        >
-          <Route index          element={<AccountDashboard />} />
+        <Route path="/account" element={<ProtectedRoute><AccountLayout /></ProtectedRoute>}>
+          <Route index                  element={<AccountDashboard />} />
           <Route path="orders"          element={<OrdersPage />} />
           <Route path="orders/:id"      element={<OrderDetailPage />} />
           <Route path="profile"         element={<ProfilePage />} />
@@ -132,24 +133,36 @@ export default function AppRouter() {
           <Route path="wishlist"        element={<WishlistPage />} />
         </Route>
 
-        {/* Admin (protected) */}
+        {/* Admin (protected: admin | superadmin) */}
         <Route
           path="/admin"
-          element={
-            <ProtectedRoute role="admin">
-              <AdminLayout />
-            </ProtectedRoute>
-          }
+          element={<ProtectedRoute role="admin"><AdminLayout /></ProtectedRoute>}
         >
-          <Route index                    element={<AdminDashboard />} />
-          <Route path="products"          element={<AdminProductsPage />} />
-          <Route path="orders"            element={<AdminOrdersPage />} />
-          <Route path="orders/:id"        element={<AdminOrderDetailPage />} />
-          <Route path="customers"         element={<AdminCustomersPage />} />
-          <Route path="customers/:id"     element={<AdminCustomerDetailPage />} />
-          <Route path="categories"        element={<AdminCategoriesPage />} />
-          <Route path="analytics"         element={<AdminAnalyticsPage />} />
-          <Route path="pos"               element={<PosPage />} />
+          <Route index                  element={<AdminDashboard />} />
+          <Route path="products"        element={<AdminProductsPage />} />
+          <Route path="orders"          element={<AdminOrdersPage />} />
+          <Route path="orders/:id"      element={<AdminOrderDetailPage />} />
+          <Route path="customers"       element={<AdminCustomersPage />} />
+          <Route path="customers/:id"   element={<AdminCustomerDetailPage />} />
+          <Route path="categories"      element={<AdminCategoriesPage />} />
+          <Route path="analytics"       element={<AdminAnalyticsPage />} />
+          <Route path="members"         element={<AdminMembersPage />} />
+          <Route path="settings"        element={<AdminSettingsPage />} />
+          <Route path="subscription"    element={<AdminSubscriptionPage />} />
+          <Route path="pos"             element={<PosPage />} />
+        </Route>
+
+        {/* SuperAdmin (protected: superadmin only) */}
+        <Route
+          path="/superadmin"
+          element={<ProtectedRoute role="superadmin"><SuperAdminLayout /></ProtectedRoute>}
+        >
+          <Route index                  element={<SuperAdminDashboard />} />
+          <Route path="tenants"         element={<SuperAdminTenantsPage />} />
+          <Route path="tenants/:id"     element={<SuperAdminTenantDetailPage />} />
+          <Route path="plans"           element={<SuperAdminPlansPage />} />
+          <Route path="invoices"        element={<SuperAdminInvoicesPage />} />
+          <Route path="activity"        element={<SuperAdminActivityPage />} />
         </Route>
 
         {/* 404 */}

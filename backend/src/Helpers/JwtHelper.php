@@ -11,15 +11,16 @@ use Throwable;
 
 class JwtHelper
 {
-    public static function generateAccessToken(int $userId, string $role): string
+    public static function generateAccessToken(int $userId, string $role, int $tenantId = 0): string
     {
         $now = time();
         $payload = [
-            'iss' => $_ENV['APP_URL'],
-            'iat' => $now,
-            'exp' => $now + JwtConfig::accessTtl(),
-            'sub' => $userId,
-            'role' => $role,
+            'iss'       => $_ENV['APP_URL'],
+            'iat'       => $now,
+            'exp'       => $now + JwtConfig::accessTtl(),
+            'sub'       => $userId,
+            'role'      => $role,
+            'tenant_id' => $tenantId,
         ];
         return JWT::encode($payload, JwtConfig::secret(), JwtConfig::algorithm());
     }

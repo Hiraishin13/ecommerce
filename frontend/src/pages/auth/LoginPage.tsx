@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -18,35 +18,65 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>
 
 function getRedirectPath(role: string | undefined, from: string): string {
-  if (from !== '/') return from
-  return role === 'admin' || role === 'superadmin' ? '/admin' : '/account'
+  if (role === 'superadmin') return '/superadmin'
+  if (role === 'admin') return '/admin'
+  if (from && from !== '/' && !from.startsWith('/admin') && !from.startsWith('/superadmin')) return from
+  return '/account'
 }
 
 export default function LoginPage() {
-  const { login, isAuthenticated, user } = useAuth()
+  const { login, logout, isAuthenticated, user } = useAuth()
   const navigate  = useNavigate()
   const location  = useLocation()
   const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/'
+  const [switching, setSwitching] = useState(false)
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
   })
 
   useEffect(() => {
-    if (isAuthenticated) navigate(getRedirectPath(user?.role, from), { replace: true })
-  }, [isAuthenticated, navigate, from, user?.role])
+    if (isAuthenticated && !switching) navigate(getRedirectPath(user?.role, from), { replace: true })
+  }, [isAuthenticated, switching]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const onSubmit = async (data: FormData) => {
     try {
       const result = await login(data.email, data.password)
-      toast.success('Welcome back!')
+      toast.success('Bienvenue !')
       navigate(getRedirectPath(result.user.role, from), { replace: true })
     } catch (err: unknown) {
       const msg =
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
-        'Invalid credentials. Please try again.'
+        'Identifiants incorrects.'
       toast.error(msg)
     }
+  }
+
+  // Si l'utilisateur est déjà connecté et veut changer de compte
+  if (isAuthenticated && !switching) {
+    return (
+      <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
+        <div className="w-full max-w-md text-center space-y-4">
+          <p className="text-sm text-muted">
+            Connecté en tant que <strong>{user?.name}</strong> ({user?.email})
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <button
+              onClick={() => navigate(getRedirectPath(user?.role, from))}
+              className="px-6 py-3 bg-black text-white text-xs font-black uppercase tracking-wider hover:bg-gray-800 transition-colors"
+            >
+              Continuer ({user?.role === 'superadmin' ? 'Super Admin' : user?.role === 'admin' ? 'Admin' : 'Mon compte'})
+            </button>
+            <button
+              onClick={async () => { setSwitching(true); await logout() }}
+              className="px-6 py-3 border border-accent text-xs font-black uppercase tracking-wider hover:border-black transition-colors"
+            >
+              Changer de compte
+            </button>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (

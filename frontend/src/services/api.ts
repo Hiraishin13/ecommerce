@@ -8,11 +8,14 @@ const api = axios.create({
   },
 })
 
-// Request interceptor — attach token
+// Request interceptor — attach token + tenant ID
 api.interceptors.request.use((config) => {
-  const token = useAuthStore.getState().token
+  const { token, tenant } = useAuthStore.getState()
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
+  }
+  if (tenant?.id) {
+    config.headers['X-Tenant-ID'] = String(tenant.id)
   }
   return config
 })
@@ -34,7 +37,8 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       useAuthStore.getState().logout()
-      window.location.href = '/login'
+      const isSuperAdmin = window.location.pathname.startsWith('/superadmin')
+      window.location.href = isSuperAdmin ? '/superadmin/login' : '/login'
     }
     return Promise.reject(error)
   }

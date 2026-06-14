@@ -13,7 +13,7 @@ class AdminMiddleware
     {
         $role = $request->param('_auth_user_role');
 
-        if ($role !== 'admin') {
+        if (!in_array($role, ['admin', 'superadmin'], true)) {
             $response->error('Accès refusé.', 403);
         }
     }

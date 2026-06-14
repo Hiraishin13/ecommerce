@@ -3,11 +3,11 @@ import { authService } from '../services/auth.service'
 import toast from 'react-hot-toast'
 
 export function useAuth() {
-  const { user, token, isAuthenticated, setAuth, logout: storeLogout, updateUser } = useAuthStore()
+  const { user, token, isAuthenticated, tenant, setAuth, logout: storeLogout, updateUser } = useAuthStore()
 
   const login = async (email: string, password: string) => {
     const response = await authService.login({ email, password })
-    setAuth(response.user, response.token)
+    setAuth(response.user, response.token, response.tenant ?? null)
     return response
   }
 
@@ -26,9 +26,11 @@ export function useAuth() {
     user,
     token,
     isAuthenticated,
+    tenant,
     login,
     logout,
     updateUser,
+    isSuperAdmin: user?.role === 'superadmin',
     isAdmin: user?.role === 'admin' || user?.role === 'superadmin',
     isCustomer: user?.role === 'customer',
   }

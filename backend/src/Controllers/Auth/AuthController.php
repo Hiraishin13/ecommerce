@@ -34,10 +34,12 @@ class AuthController extends Controller
         }
 
         try {
+            $tenantId = (int) ($request->param('_tenant_id') ?: 1);
             $result = $this->authService->register(
                 trim($data['name']),
                 strtolower(trim($data['email'])),
-                $data['password']
+                $data['password'],
+                $tenantId
             );
 
             $response->setCookie('refresh_token', $result['refresh_token'], Jwt::refreshTtl());
@@ -64,9 +66,11 @@ class AuthController extends Controller
         }
 
         try {
+            $tenantId = (int) ($request->param('_tenant_id') ?: 1);
             $result = $this->authService->login(
                 strtolower(trim($data['email'])),
-                $data['password']
+                $data['password'],
+                $tenantId
             );
 
             $response->setCookie('refresh_token', $result['refresh_token'], Jwt::refreshTtl());
@@ -74,6 +78,7 @@ class AuthController extends Controller
             $response->success([
                 'user'         => $result['user'],
                 'access_token' => $result['access_token'],
+                'tenant'       => $result['tenant'] ?? null,
             ], 'Login successful.');
         } catch (RuntimeException $e) {
             $response->error($e->getMessage(), $e->getCode() ?: 401);
@@ -119,7 +124,8 @@ class AuthController extends Controller
         }
 
         try {
-            $this->authService->forgotPassword(strtolower(trim($data['email'])));
+            $tenantId = (int) ($request->param('_tenant_id') ?: 1);
+            $this->authService->forgotPassword(strtolower(trim($data['email'])), $tenantId);
         } catch (\Throwable) {
             // Swallow errors to prevent user enumeration
         }

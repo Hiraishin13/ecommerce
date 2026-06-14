@@ -28,8 +28,9 @@ class AdminUserController extends Controller
         $offset = ($page - 1) * $limit;
         $search = (string) $request->query('search', '');
 
-        $users = $this->users->findAll($limit, $offset, $search);
-        $total = $this->users->countAll($search);
+        $tenantId = (int) $request->param('_tenant_id');
+        $users = $this->users->findAll($limit, $offset, $search, $tenantId);
+        $total = $this->users->countAll($search, $tenantId);
 
         $response->success([
             'users'      => $users,

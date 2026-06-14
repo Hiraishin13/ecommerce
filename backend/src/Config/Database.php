@@ -45,4 +45,9 @@ class Database
     {
         return $this->connection;
     }
+
+    public static function pdo(): PDO
+    {
+        return static::getInstance()->getConnection();
+    }
 }

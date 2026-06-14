@@ -29,11 +29,14 @@ const adminLinks = [
   { to: '/admin/categories', label: 'Categories', icon: Tag },
   { to: '/admin/analytics',  label: 'Analytics',  icon: BarChart2 },
   { to: '/admin/pos',        label: 'Caisse POS', icon: CreditCard },
+  { to: '/admin/members',      label: 'Members',     icon: Users },
+  { to: '/admin/settings',     label: 'Settings',    icon: Tag },
+  { to: '/admin/subscription', label: 'Abonnement',  icon: CreditCard },
 ]
 
 export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const { user, logout } = useAuth()
+  const { user, logout, tenant } = useAuth()
   const navigate = useNavigate()
   const { pathname } = useLocation()
 
@@ -62,7 +65,7 @@ export default function AdminLayout() {
       >
         {/* Logo */}
         <div className="px-6 py-5 border-b border-[#222]">
-          <p className="text-lg font-black uppercase tracking-[0.2em]">SHOP</p>
+          <p className="text-lg font-black uppercase tracking-[0.2em]">{tenant?.name ?? 'SHOP'}</p>
           <p className="text-xs text-white/50 uppercase tracking-wider mt-0.5">Admin Panel</p>
         </div>
 

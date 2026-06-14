@@ -13,20 +13,26 @@ class UserModel extends Model
 
     public function findByEmail(string $email): array|false
     {
-        $stmt = $this->db->prepare(
-            'SELECT * FROM users WHERE email = ? LIMIT 1'
-        );
+        $stmt = $this->db->prepare('SELECT * FROM users WHERE email = ? LIMIT 1');
         $stmt->execute([$email]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function findByEmailAndTenant(string $email, int $tenantId): array|false
+    {
+        $stmt = $this->db->prepare('SELECT * FROM users WHERE email = ? AND tenant_id = ? LIMIT 1');
+        $stmt->execute([$email, $tenantId]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
     public function create(array $data): int
     {
         $stmt = $this->db->prepare(
-            'INSERT INTO users (name, email, password, role, verify_token)
-             VALUES (:name, :email, :password, :role, :verify_token)'
+            'INSERT INTO users (tenant_id, name, email, password, role, verify_token)
+             VALUES (:tenant_id, :name, :email, :password, :role, :verify_token)'
         );
         $stmt->execute([
+            ':tenant_id'    => $data['tenant_id'] ?? 1,
             ':name'         => $data['name'],
             ':email'        => $data['email'],
             ':password'     => $data['password'],
@@ -102,42 +108,51 @@ class UserModel extends Model
         return $stmt->execute($values);
     }
 
-    public function findAll(int $limit = 20, int $offset = 0, string $search = ''): array
+    public function findAll(int $limit = 20, int $offset = 0, string $search = '', int $tenantId = 0): array
     {
-        $orderCount = '(SELECT COUNT(*) FROM orders WHERE orders.user_id = users.id) AS orders_count';
+        $orderCount = '(SELECT COUNT(*) FROM orders WHERE orders.user_id = users.id AND orders.tenant_id = users.tenant_id) AS orders_count';
+        $tenantWhere = $tenantId > 0 ? 'AND tenant_id = ?' : '';
+
         if ($search !== '') {
-            $stmt = $this->db->prepare(
-                "SELECT id, name, email, role, email_verified, avatar, created_at, $orderCount
-                 FROM users
-                 WHERE name LIKE ? OR email LIKE ?
-                 ORDER BY created_at DESC
-                 LIMIT ? OFFSET ?"
-            );
             $like = '%' . $search . '%';
-            $stmt->execute([$like, $like, $limit, $offset]);
-        } else {
+            $params = $tenantId > 0 ? [$like, $like, $tenantId, $limit, $offset] : [$like, $like, $limit, $offset];
             $stmt = $this->db->prepare(
                 "SELECT id, name, email, role, email_verified, avatar, created_at, $orderCount
                  FROM users
+                 WHERE (name LIKE ? OR email LIKE ?) $tenantWhere
                  ORDER BY created_at DESC
                  LIMIT ? OFFSET ?"
             );
-            $stmt->execute([$limit, $offset]);
+            $stmt->execute($params);
+        } else {
+            $params = $tenantId > 0 ? [$tenantId, $limit, $offset] : [$limit, $offset];
+            $where  = $tenantId > 0 ? 'WHERE tenant_id = ?' : '';
+            $stmt = $this->db->prepare(
+                "SELECT id, name, email, role, email_verified, avatar, created_at, $orderCount
+                 FROM users $where
+                 ORDER BY created_at DESC
+                 LIMIT ? OFFSET ?"
+            );
+            $stmt->execute($params);
         }
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function countAll(string $search = ''): int
+    public function countAll(string $search = '', int $tenantId = 0): int
     {
+        $tenantWhere = $tenantId > 0 ? 'AND tenant_id = ?' : '';
         if ($search !== '') {
-            $stmt = $this->db->prepare(
-                'SELECT COUNT(*) FROM users WHERE name LIKE ? OR email LIKE ?'
-            );
             $like = '%' . $search . '%';
-            $stmt->execute([$like, $like]);
+            $params = $tenantId > 0 ? [$like, $like, $tenantId] : [$like, $like];
+            $stmt = $this->db->prepare(
+                "SELECT COUNT(*) FROM users WHERE (name LIKE ? OR email LIKE ?) $tenantWhere"
+            );
+            $stmt->execute($params);
         } else {
-            $stmt = $this->db->prepare('SELECT COUNT(*) FROM users');
-            $stmt->execute();
+            $where  = $tenantId > 0 ? 'WHERE tenant_id = ?' : '';
+            $params = $tenantId > 0 ? [$tenantId] : [];
+            $stmt = $this->db->prepare("SELECT COUNT(*) FROM users $where");
+            $stmt->execute($params);
         }
         return (int) $stmt->fetchColumn();
     }

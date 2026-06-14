@@ -24,10 +24,10 @@ class AuthMiddleware
             $response->error('Token invalide ou expiré.', 401);
         }
 
-        // Merge auth data into existing route params (preserves {id}, {slug}, etc.)
         $request->mergeParams([
             '_auth_user_id'   => $payload->sub,
             '_auth_user_role' => $payload->role,
+            '_auth_tenant_id' => (int) ($payload->tenant_id ?? 0),
         ]);
     }
 }
