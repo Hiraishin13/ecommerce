@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard,
   Package,
@@ -9,6 +9,13 @@ import {
   Menu,
   CreditCard,
 } from 'lucide-react'
+import { m } from 'framer-motion'
+
+const pageVariants = {
+  initial: { opacity: 0, y: 8 },
+  animate: { opacity: 1, y: 0 },
+}
+const pageTransition = { duration: 0.2, ease: [0.25, 0.1, 0.25, 1] as const }
 import { useState } from 'react'
 import { useAuth } from '../../hooks/useAuth'
 import { cn } from '../../utils/cn'
@@ -26,6 +33,7 @@ export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const { user, logout } = useAuth()
   const navigate = useNavigate()
+  const { pathname } = useLocation()
 
   const handleLogout = async () => {
     await logout()
@@ -111,9 +119,16 @@ export default function AdminLayout() {
         </header>
 
         {/* Content */}
-        <main className="flex-1 p-6 overflow-y-auto">
+        <m.main
+          key={pathname}
+          className="flex-1 p-6 overflow-y-auto"
+          variants={pageVariants}
+          initial="initial"
+          animate="animate"
+          transition={pageTransition}
+        >
           <Outlet />
-        </main>
+        </m.main>
       </div>
     </div>
   )

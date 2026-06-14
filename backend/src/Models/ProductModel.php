@@ -36,7 +36,11 @@ class ProductModel extends Model
         }
 
         if (!empty($filters['is_featured'])) {
-            $where[]    = 'p.is_featured = 1';
+            $where[] = 'p.is_featured = 1';
+        }
+
+        if (!empty($filters['has_discount'])) {
+            $where[] = 'p.compare_price > p.price';
         }
 
         if (!empty($filters['search'])) {
@@ -48,11 +52,20 @@ class ProductModel extends Model
         $limit  = (int) ($pagination['limit'] ?? 20);
         $offset = (int) ($pagination['offset'] ?? 0);
 
+        $sortMap = [
+            'newest'     => 'p.created_at DESC',
+            'oldest'     => 'p.created_at ASC',
+            'price_asc'  => 'p.price ASC',
+            'price_desc' => 'p.price DESC',
+            'popular'    => 'p.is_featured DESC, p.created_at DESC',
+        ];
+        $orderBy = $sortMap[$pagination['sort'] ?? 'newest'] ?? 'p.created_at DESC';
+
         $sql = "SELECT p.*, c.name AS category_name, c.slug AS category_slug
                 FROM products p
                 LEFT JOIN categories c ON c.id = p.category_id
                 WHERE {$whereClause}
-                ORDER BY p.created_at DESC
+                ORDER BY {$orderBy}
                 LIMIT ? OFFSET ?";
 
         $bindings[] = $limit;
@@ -84,7 +97,11 @@ class ProductModel extends Model
         }
 
         if (!empty($filters['is_featured'])) {
-            $where[]    = 'p.is_featured = 1';
+            $where[] = 'p.is_featured = 1';
+        }
+
+        if (!empty($filters['has_discount'])) {
+            $where[] = 'p.compare_price > p.price';
         }
 
         if (!empty($filters['search'])) {

@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
+import { m } from 'framer-motion'
 import { productService, type Product } from '../services/product.service'
 import { categoryService, type Category } from '../services/category.service'
 import ProductCard from '../components/common/ProductCard'
 import SkeletonCard from '../components/common/SkeletonCard'
 import Button from '../components/ui/Button'
+import { stagger, staggerItem } from '../utils/motion'
 
 export default function HomePage() {
   const [featured, setFeatured] = useState<Product[]>([])
@@ -36,17 +38,22 @@ export default function HomePage() {
       {/* Hero */}
       <section className="relative bg-black text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="py-28 md:py-40 max-w-2xl">
-            <p className="text-xs font-bold uppercase tracking-[0.3em] text-white/60 mb-4">
+          <m.div
+            className="py-28 md:py-40 max-w-2xl"
+            variants={stagger(0.08)}
+            initial="hidden"
+            animate="visible"
+          >
+            <m.p variants={staggerItem} className="text-xs font-bold uppercase tracking-[0.3em] text-white/60 mb-4">
               New Collection 2026
-            </p>
-            <h1 className="text-5xl md:text-7xl font-black uppercase tracking-tight leading-none mb-6">
+            </m.p>
+            <m.h1 variants={staggerItem} className="text-5xl md:text-7xl font-black uppercase tracking-tight leading-none mb-6">
               DEFINE YOUR STYLE
-            </h1>
-            <p className="text-base text-white/70 mb-10 max-w-md leading-relaxed">
+            </m.h1>
+            <m.p variants={staggerItem} className="text-base text-white/70 mb-10 max-w-md leading-relaxed">
               Minimal design. Maximum quality. Discover our curated collection of premium products.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4">
+            </m.p>
+            <m.div variants={staggerItem} className="flex flex-col sm:flex-row gap-4">
               <Link to="/products">
                 <Button size="lg" variant="secondary" className="border-white text-white hover:bg-white hover:text-black">
                   Shop Now
@@ -58,8 +65,8 @@ export default function HomePage() {
                   Explore
                 </Button>
               </Link>
-            </div>
-          </div>
+            </m.div>
+          </m.div>
         </div>
         {/* Decorative stripe */}
         <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/10" />
@@ -128,7 +135,13 @@ export default function HomePage() {
               View All <ArrowRight size={14} />
             </Link>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <m.div
+            className="grid grid-cols-2 md:grid-cols-4 gap-4"
+            variants={stagger(0.05)}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-60px' }}
+          >
             {loading
               ? Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)
               : featured.length > 0
@@ -138,7 +151,7 @@ export default function HomePage() {
                   No featured products yet.
                 </div>
               )}
-          </div>
+          </m.div>
         </div>
       </section>
 

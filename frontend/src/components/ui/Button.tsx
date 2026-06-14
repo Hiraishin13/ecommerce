@@ -1,14 +1,15 @@
 import React from 'react'
+import { m, useReducedMotion } from 'framer-motion'
 import { cn } from '../../utils/cn'
 import Spinner from './Spinner'
 
 type ButtonVariant = 'primary' | 'secondary' | 'ghost'
-type ButtonSize = 'sm' | 'md' | 'lg'
+type ButtonSize    = 'sm' | 'md' | 'lg'
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: ButtonVariant
-  size?: ButtonSize
-  loading?: boolean
+  variant?:  ButtonVariant
+  size?:     ButtonSize
+  loading?:  boolean
   fullWidth?: boolean
 }
 
@@ -28,23 +29,15 @@ const sizeClasses: Record<ButtonSize, string> = {
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  (
-    {
-      variant = 'primary',
-      size = 'md',
-      loading = false,
-      fullWidth = false,
-      className,
-      children,
-      disabled,
-      ...props
-    },
-    ref
-  ) => {
+  ({ variant = 'primary', size = 'md', loading = false, fullWidth = false, className, children, disabled, ...props }, ref) => {
+    const reduced = useReducedMotion()
+
     return (
-      <button
+      <m.button
         ref={ref}
         disabled={disabled || loading}
+        whileTap={!disabled && !loading && !reduced ? { scale: 0.97 } : {}}
+        transition={{ duration: 0.1 }}
         className={cn(
           'inline-flex items-center justify-center gap-2',
           'uppercase tracking-widest font-bold',
@@ -55,11 +48,11 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           fullWidth && 'w-full',
           className
         )}
-        {...props}
+        {...(props as React.ComponentPropsWithoutRef<typeof m.button>)}
       >
         {loading && <Spinner size="sm" color={variant === 'primary' ? 'white' : 'black'} />}
         {children}
-      </button>
+      </m.button>
     )
   }
 )

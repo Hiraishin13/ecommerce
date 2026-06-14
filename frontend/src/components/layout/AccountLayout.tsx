@@ -1,8 +1,15 @@
-import { NavLink, Outlet } from 'react-router-dom'
+import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { User, ShoppingBag, MapPin, Heart, Settings } from 'lucide-react'
+import { m } from 'framer-motion'
 import Navbar from './Navbar'
 import Footer from './Footer'
 import { cn } from '../../utils/cn'
+
+const pageVariants = {
+  initial: { opacity: 0, y: 8 },
+  animate: { opacity: 1, y: 0 },
+}
+const pageTransition = { duration: 0.2, ease: [0.25, 0.1, 0.25, 1] as const }
 
 const accountLinks = [
   { to: '/account', label: 'Dashboard', icon: Settings, end: true },
@@ -13,6 +20,7 @@ const accountLinks = [
 ]
 
 export default function AccountLayout() {
+  const { pathname } = useLocation()
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -71,9 +79,16 @@ export default function AccountLayout() {
           </div>
 
           {/* Content */}
-          <main className="flex-1 min-w-0">
+          <m.main
+            key={pathname}
+            className="flex-1 min-w-0"
+            variants={pageVariants}
+            initial="initial"
+            animate="animate"
+            transition={pageTransition}
+          >
             <Outlet />
-          </main>
+          </m.main>
         </div>
       </div>
       <Footer />

@@ -46,7 +46,13 @@ class ProductController extends Controller
             $filters['is_featured'] = 1;
         }
 
-        $products = $this->products->findAll($filters, ['limit' => $limit, 'offset' => $offset]);
+        if ($request->query('has_discount')) {
+            $filters['has_discount'] = 1;
+        }
+
+        $sort = $request->query('sort', 'newest');
+
+        $products = $this->products->findAll($filters, ['limit' => $limit, 'offset' => $offset, 'sort' => $sort]);
         $total    = $this->products->countFiltered($filters);
 
         // Decode images JSON

@@ -1,9 +1,10 @@
+import { LazyMotion, domAnimation } from 'framer-motion'
 import { Toaster } from 'react-hot-toast'
 import AppRouter from './router'
 
 function App() {
   return (
-    <>
+    <LazyMotion features={domAnimation}>
       <AppRouter />
       <Toaster
         position="top-right"
@@ -25,7 +26,7 @@ function App() {
           },
         }}
       />
-    </>
+    </LazyMotion>
   )
 }
 

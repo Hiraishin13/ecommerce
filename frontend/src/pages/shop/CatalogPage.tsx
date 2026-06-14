@@ -1,9 +1,11 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { SlidersHorizontal, X, Search } from 'lucide-react'
+import { m } from 'framer-motion'
 import { productService, type Product, type ProductFilters } from '../../services/product.service'
 import { categoryService, type Category } from '../../services/category.service'
-import ProductCard from '../../components/common/ProductCard'
+import ProductCard, { cardVariants } from '../../components/common/ProductCard'
+import { stagger } from '../../utils/motion'
 import SkeletonCard from '../../components/common/SkeletonCard'
 import Pagination from '../../components/ui/Pagination'
 import Breadcrumb from '../../components/common/Breadcrumb'
@@ -30,11 +32,12 @@ export default function CatalogPage() {
   const [searchInput, setSearchInput] = useState(searchParams.get('search') || '')
   const debouncedSearch = useDebounce(searchInput, 400)
 
-  const page = Number(searchParams.get('page') || 1)
-  const category = searchParams.get('category') || ''
-  const sort = (searchParams.get('sort') || 'newest') as ProductFilters['sort']
-  const minPrice = searchParams.get('min_price') || ''
-  const maxPrice = searchParams.get('max_price') || ''
+  const page       = Number(searchParams.get('page') || 1)
+  const category   = searchParams.get('category') || ''
+  const sort       = (searchParams.get('sort') || 'newest') as ProductFilters['sort']
+  const minPrice   = searchParams.get('min_price') || ''
+  const maxPrice   = searchParams.get('max_price') || ''
+  const hasDiscount = searchParams.get('has_discount') === '1'
 
   const updateParam = (key: string, value: string) => {
     const p = new URLSearchParams(searchParams)
@@ -52,25 +55,30 @@ export default function CatalogPage() {
   const loadProducts = useCallback(async () => {
     setLoading(true)
     try {
-      const filters: ProductFilters = {
-        page,
-        per_page: 12,
-        sort,
-        ...(category && { category }),
-        ...(debouncedSearch && { search: debouncedSearch }),
-        ...(minPrice && { min_price: Number(minPrice) }),
-        ...(maxPrice && { max_price: Number(maxPrice) }),
-      }
-      const res = await productService.getProducts(filters)
-      setProducts(res.data)
-      setTotalPages(res.meta.last_page)
-      setTotal(res.meta.total)
+      // Construit les paramètres URL directement pour éviter les conflits de types
+      const params = new URLSearchParams()
+      params.set('page', String(page))
+      params.set('limit', '12')
+      params.set('sort', sort ?? 'newest')
+      if (category)      params.set('category', category)
+      if (debouncedSearch) params.set('search', debouncedSearch)
+      if (minPrice)      params.set('min_price', minPrice)
+      if (maxPrice)      params.set('max_price', maxPrice)
+      if (hasDiscount)   params.set('has_discount', '1')
+
+      const res = await import('../../services/api').then((m) => m.default.get(`/products?${params}`))
+      const payload = res.data
+      const list: Product[] = payload?.products ?? []
+      const pag  = payload?.pagination ?? {}
+      setProducts(list)
+      setTotalPages(pag.total_pages ?? 1)
+      setTotal(pag.total ?? list.length)
     } catch {
       setProducts([])
     } finally {
       setLoading(false)
     }
-  }, [page, sort, category, debouncedSearch, minPrice, maxPrice])
+  }, [page, sort, category, debouncedSearch, minPrice, maxPrice, hasDiscount])
 
   useEffect(() => {
     loadProducts()
@@ -97,7 +105,9 @@ export default function CatalogPage() {
 
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-black uppercase tracking-wider">Products</h1>
+          <h1 className="text-2xl font-black uppercase tracking-wider">
+          {hasDiscount ? 'Promotions' : sort === 'newest' && !category ? 'Nouveautés' : 'Boutique'}
+        </h1>
           {!loading && (
             <p className="text-xs text-muted mt-1">{total} {total === 1 ? 'item' : 'items'}</p>
           )}
@@ -237,9 +247,15 @@ export default function CatalogPage() {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+              <m.div
+                key={`grid-${page}-${category}-${sort}`}
+                className="grid grid-cols-2 lg:grid-cols-3 gap-4"
+                variants={stagger(0.04)}
+                initial="hidden"
+                animate="visible"
+              >
                 {products.map((p) => <ProductCard key={p.id} product={p} />)}
-              </div>
+              </m.div>
               <div className="mt-8 flex justify-center">
                 <Pagination
                   currentPage={page}

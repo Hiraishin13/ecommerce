@@ -1,21 +1,23 @@
 import { useEffect, useState, type ElementType } from 'react'
 import { Link } from 'react-router-dom'
 import { ShoppingCart, Users, DollarSign, Package, ArrowRight } from 'lucide-react'
+import { m } from 'framer-motion'
 import api from '../../services/api'
 import { type Order } from '../../services/order.service'
 import { formatPrice } from '../../utils/formatPrice'
+import { stagger, staggerItem, tableRow } from '../../utils/motion'
 import OrderStatusBadge from '../account/components/OrderStatusBadge'
 import Spinner from '../../components/ui/Spinner'
 
 interface KPI {
   label: string
   value: string | number
-  icon: ElementType
+  icon:  ElementType
   color: string
 }
 
 export default function AdminDashboard() {
-  const [orders, setOrders] = useState<Order[]>([])
+  const [orders, setOrders]   = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -35,51 +37,53 @@ export default function AdminDashboard() {
     .reduce((sum, o) => sum + (o.total ?? 0), 0)
 
   const kpis: KPI[] = [
-    {
-      label: 'Total Orders',
-      value: orders.length,
-      icon: ShoppingCart,
-      color: 'bg-black text-white',
-    },
-    {
-      label: 'Revenue',
-      value: formatPrice(totalRevenue),
-      icon: DollarSign,
-      color: 'bg-[#388E3C] text-white',
-    },
-    {
-      label: 'Pending Orders',
-      value: orders.filter((o) => o.status === 'pending').length,
-      icon: Package,
-      color: 'bg-[#F57C00] text-white',
-    },
-    {
-      label: 'Customers',
-      value: '—',
-      icon: Users,
-      color: 'bg-[#1A1A1A] text-white',
-    },
+    { label: 'Total Orders',   value: orders.length,                                   icon: ShoppingCart, color: 'bg-black text-white'         },
+    { label: 'Revenue',        value: formatPrice(totalRevenue),                        icon: DollarSign,   color: 'bg-[#388E3C] text-white'     },
+    { label: 'Pending Orders', value: orders.filter((o) => o.status === 'pending').length, icon: Package,  color: 'bg-[#F57C00] text-white'     },
+    { label: 'Customers',      value: '—',                                              icon: Users,        color: 'bg-[#1A1A1A] text-white'     },
   ]
 
   return (
     <div>
-      <h1 className="text-xl font-black uppercase tracking-wider mb-6">Dashboard</h1>
+      <m.h1
+        className="text-xl font-black uppercase tracking-wider mb-6"
+        initial={{ opacity: 0, y: -6 }}
+        animate={{ opacity: 1, y:  0 }}
+        transition={{ duration: 0.2 }}
+      >
+        Dashboard
+      </m.h1>
 
-      {/* KPIs */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      {/* KPIs — stagger */}
+      <m.div
+        className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8"
+        variants={stagger(0.07)}
+        initial="hidden"
+        animate="visible"
+      >
         {kpis.map((kpi) => (
-          <div key={kpi.label} className="border border-accent p-5">
+          <m.div
+            key={kpi.label}
+            variants={staggerItem}
+            className="border border-accent p-5"
+            whileHover={{ y: -2, boxShadow: '0 4px 16px rgba(0,0,0,0.08)' }}
+            transition={{ duration: 0.18 }}
+          >
             <div className={`w-10 h-10 flex items-center justify-center mb-3 ${kpi.color}`}>
               <kpi.icon size={20} />
             </div>
             <p className="text-2xl font-black mb-1">{kpi.value}</p>
             <p className="text-xs text-muted uppercase tracking-wider">{kpi.label}</p>
-          </div>
+          </m.div>
         ))}
-      </div>
+      </m.div>
 
       {/* Recent orders */}
-      <div>
+      <m.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y:  0 }}
+        transition={{ duration: 0.25, delay: 0.2 }}
+      >
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-black uppercase tracking-wider">Recent Orders</h2>
           <Link
@@ -106,9 +110,17 @@ export default function AdminDashboard() {
                   <th className="px-4 py-3"></th>
                 </tr>
               </thead>
-              <tbody>
+              <m.tbody
+                variants={stagger(0.04)}
+                initial="hidden"
+                animate="visible"
+              >
                 {orders.slice(0, 10).map((order) => (
-                  <tr key={order.id} className="border-t border-accent hover:bg-[#FAFAFA] transition-colors">
+                  <m.tr
+                    key={order.id}
+                    variants={tableRow}
+                    className="border-t border-accent hover:bg-[#FAFAFA] transition-colors"
+                  >
                     <td className="px-4 py-3 font-bold text-xs">#{order.order_number ?? order.id}</td>
                     <td className="px-4 py-3 text-xs text-muted">
                       {new Date(order.created_at).toLocaleDateString('en-GB')}
@@ -127,7 +139,7 @@ export default function AdminDashboard() {
                         View
                       </Link>
                     </td>
-                  </tr>
+                  </m.tr>
                 ))}
                 {orders.length === 0 && (
                   <tr>
@@ -136,11 +148,11 @@ export default function AdminDashboard() {
                     </td>
                   </tr>
                 )}
-              </tbody>
+              </m.tbody>
             </table>
           </div>
         )}
-      </div>
+      </m.div>
     </div>
   )
 }

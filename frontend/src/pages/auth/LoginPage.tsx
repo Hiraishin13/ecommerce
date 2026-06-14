@@ -3,13 +3,15 @@ import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { m } from 'framer-motion'
 import toast from 'react-hot-toast'
 import { useAuth } from '../../hooks/useAuth'
 import Input from '../../components/ui/Input'
 import Button from '../../components/ui/Button'
+import { stagger, staggerItem } from '../../utils/motion'
 
 const schema = z.object({
-  email: z.string().email('Invalid email address'),
+  email:    z.string().email('Invalid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
 })
 
@@ -22,20 +24,16 @@ function getRedirectPath(role: string | undefined, from: string): string {
 
 export default function LoginPage() {
   const { login, isAuthenticated, user } = useAuth()
-  const navigate = useNavigate()
-  const location = useLocation()
+  const navigate  = useNavigate()
+  const location  = useLocation()
   const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/'
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<FormData>({ resolver: zodResolver(schema) })
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
+    resolver: zodResolver(schema),
+  })
 
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate(getRedirectPath(user?.role, from), { replace: true })
-    }
+    if (isAuthenticated) navigate(getRedirectPath(user?.role, from), { replace: true })
   }, [isAuthenticated, navigate, from, user?.role])
 
   const onSubmit = async (data: FormData) => {
@@ -53,15 +51,20 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md">
+      <m.div
+        className="w-full max-w-md"
+        variants={stagger(0.06)}
+        initial="hidden"
+        animate="visible"
+      >
         {/* Header */}
-        <div className="text-center mb-10">
+        <m.div variants={staggerItem} className="text-center mb-10">
           <Link to="/" className="text-2xl font-black uppercase tracking-[0.2em]">SHOP</Link>
           <h1 className="text-xl font-black uppercase tracking-wider mt-4">Sign In</h1>
           <p className="text-sm text-muted mt-1">Welcome back</p>
-        </div>
+        </m.div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <m.form variants={staggerItem} onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <Input
             label="Email"
             type="email"
@@ -70,7 +73,6 @@ export default function LoginPage() {
             autoComplete="email"
             {...register('email')}
           />
-
           <Input
             label="Password"
             type="password"
@@ -92,17 +94,17 @@ export default function LoginPage() {
           <Button type="submit" fullWidth loading={isSubmitting} size="lg">
             Sign In
           </Button>
-        </form>
+        </m.form>
 
-        <div className="mt-6 text-center">
+        <m.div variants={staggerItem} className="mt-6 text-center">
           <p className="text-xs text-muted">
             Don&apos;t have an account?{' '}
             <Link to="/register" className="font-bold text-black hover:underline uppercase tracking-wider">
               Register
             </Link>
           </p>
-        </div>
-      </div>
+        </m.div>
+      </m.div>
     </div>
   )
 }

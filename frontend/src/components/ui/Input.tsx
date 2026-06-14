@@ -1,12 +1,13 @@
 import React, { type ReactNode } from 'react'
+import { AnimatePresence, m } from 'framer-motion'
 import { cn } from '../../utils/cn'
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  label?: string
-  error?: string
-  hint?: string
-  icon?: ReactNode
-  iconPosition?: 'left' | 'right'
+  label?:         string
+  error?:         string
+  hint?:          string
+  icon?:          ReactNode
+  iconPosition?:  'left' | 'right'
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
@@ -36,7 +37,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
               'transition-colors duration-200',
               'placeholder:text-muted',
               error && 'border-[#D32F2F] focus:border-[#D32F2F]',
-              icon && iconPosition === 'left' && 'pl-10',
+              icon && iconPosition === 'left'  && 'pl-10',
               icon && iconPosition === 'right' && 'pr-10',
               className
             )}
@@ -46,8 +47,26 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted">{icon}</span>
           )}
         </div>
-        {error && <p className="mt-1 text-xs text-[#D32F2F]">{error}</p>}
-        {hint && !error && <p className="mt-1 text-xs text-muted">{hint}</p>}
+
+        {/* Error animé */}
+        <AnimatePresence initial={false}>
+          {error && (
+            <m.p
+              key="error"
+              initial={{ opacity: 0, height: 0, marginTop: 0 }}
+              animate={{ opacity: 1, height: 'auto', marginTop: 4 }}
+              exit={{    opacity: 0, height: 0, marginTop: 0 }}
+              transition={{ duration: 0.18, ease: [0.25, 0.1, 0.25, 1] }}
+              className="text-xs text-[#D32F2F] overflow-hidden"
+            >
+              {error}
+            </m.p>
+          )}
+        </AnimatePresence>
+
+        {hint && !error && (
+          <p className="mt-1 text-xs text-muted">{hint}</p>
+        )}
       </div>
     )
   }
