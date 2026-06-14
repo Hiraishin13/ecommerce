@@ -13,6 +13,7 @@ use App\Controllers\Admin\AdminProductController;
 use App\Controllers\Admin\AdminOrderController;
 use App\Controllers\Admin\AdminUserController;
 use App\Controllers\Admin\AdminCategoryController;
+use App\Controllers\Admin\AdminUploadController;
 use App\Controllers\Admin\PosController;
 use App\Controllers\WebhookController;
 use App\Middleware\AuthMiddleware;
@@ -74,9 +75,14 @@ $this->router->post('/api/admin/categories',       [AdminCategoryController::cla
 $this->router->put('/api/admin/categories/{id}',   [AdminCategoryController::class, 'update'],  [AuthMiddleware::class, AdminMiddleware::class]);
 $this->router->delete('/api/admin/categories/{id}',[AdminCategoryController::class, 'destroy'], [AuthMiddleware::class, AdminMiddleware::class]);
 
-$this->router->get('/api/admin/orders',            [AdminOrderController::class, 'index'],  [AuthMiddleware::class, AdminMiddleware::class]);
-$this->router->get('/api/admin/orders/{id}',       [AdminOrderController::class, 'show'],   [AuthMiddleware::class, AdminMiddleware::class]);
-$this->router->patch('/api/admin/orders/{id}/status',[AdminOrderController::class, 'updateStatus'],[AuthMiddleware::class, AdminMiddleware::class]);
+$this->router->get('/api/admin/orders/stats',         [AdminOrderController::class, 'stats'],        [AuthMiddleware::class, AdminMiddleware::class]);
+$this->router->get('/api/admin/orders',               [AdminOrderController::class, 'index'],        [AuthMiddleware::class, AdminMiddleware::class]);
+$this->router->get('/api/admin/orders/{id}',          [AdminOrderController::class, 'show'],         [AuthMiddleware::class, AdminMiddleware::class]);
+$this->router->patch('/api/admin/orders/{id}/status', [AdminOrderController::class, 'updateStatus'], [AuthMiddleware::class, AdminMiddleware::class]);
+$this->router->patch('/api/admin/orders/{id}/meta',   [AdminOrderController::class, 'updateMeta'],   [AuthMiddleware::class, AdminMiddleware::class]);
+
+$this->router->post('/api/admin/upload',   [AdminUploadController::class, 'upload'],  [AuthMiddleware::class, AdminMiddleware::class]);
+$this->router->delete('/api/admin/upload', [AdminUploadController::class, 'destroy'], [AuthMiddleware::class, AdminMiddleware::class]);
 
 // ── POS — Caisse ──────────────────────────────────────────────────────────────
 $this->router->get('/api/admin/pos/recherche',             [PosController::class, 'rechercherProduits'],   [AuthMiddleware::class, AdminMiddleware::class]);

@@ -8,6 +8,7 @@ import {
   LogOut,
   Menu,
   CreditCard,
+  BarChart2,
 } from 'lucide-react'
 import { m } from 'framer-motion'
 
@@ -21,12 +22,13 @@ import { useAuth } from '../../hooks/useAuth'
 import { cn } from '../../utils/cn'
 
 const adminLinks = [
-  { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
-  { to: '/admin/products', label: 'Products', icon: Package },
-  { to: '/admin/orders', label: 'Orders', icon: ShoppingCart },
-  { to: '/admin/customers', label: 'Customers', icon: Users },
+  { to: '/admin',            label: 'Dashboard',  icon: LayoutDashboard, end: true },
+  { to: '/admin/products',   label: 'Products',   icon: Package },
+  { to: '/admin/orders',     label: 'Orders',     icon: ShoppingCart },
+  { to: '/admin/customers',  label: 'Customers',  icon: Users },
   { to: '/admin/categories', label: 'Categories', icon: Tag },
-  { to: '/admin/pos', label: 'Caisse POS', icon: CreditCard },
+  { to: '/admin/analytics',  label: 'Analytics',  icon: BarChart2 },
+  { to: '/admin/pos',        label: 'Caisse POS', icon: CreditCard },
 ]
 
 export default function AdminLayout() {

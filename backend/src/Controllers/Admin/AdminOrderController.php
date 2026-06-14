@@ -55,6 +55,49 @@ class AdminOrderController extends Controller
         $response->success(['order' => $order]);
     }
 
+    public function stats(Request $request, Response $response): void
+    {
+        $months      = max(1, min(24, (int) $request->query('months', 6)));
+        $monthly     = $this->orders->getStats($months);
+        $topProducts = $this->orders->getTopProducts(5);
+        $totalOrders = $this->orders->countAll();
+        $totalRev    = (float) array_sum(array_column($monthly, 'revenue'));
+
+        $response->success([
+            'monthly'      => $monthly,
+            'top_products' => $topProducts,
+            'total_orders' => $totalOrders,
+            'total_revenue'=> $totalRev,
+        ]);
+    }
+
+    public function updateMeta(Request $request, Response $response): void
+    {
+        $orderId = (int) $request->param('id');
+        $data    = $request->body();
+
+        $order = $this->orders->findById($orderId);
+        if (!$order) {
+            $response->error('Order not found.', 404);
+        }
+
+        $fields = [];
+        if (array_key_exists('tracking_number', $data)) {
+            $fields['tracking_number'] = $data['tracking_number'] !== '' ? (string) $data['tracking_number'] : null;
+        }
+        if (array_key_exists('admin_notes', $data)) {
+            $fields['admin_notes'] = $data['admin_notes'] !== '' ? (string) $data['admin_notes'] : null;
+        }
+
+        if (empty($fields)) {
+            $response->error('Nothing to update.', 400);
+        }
+
+        $this->orders->updateMeta($orderId, $fields);
+        $updated = $this->orders->findById($orderId);
+        $response->success(['order' => $updated], 'Order updated.');
+    }
+
     public function updateStatus(Request $request, Response $response): void
     {
         $orderId = (int) $request->param('id');

@@ -32,13 +32,15 @@ const AddressesPage    = lazy(() => import('../pages/account/AddressesPage'))
 const WishlistPage     = lazy(() => import('../pages/account/WishlistPage'))
 
 // Admin pages
-const AdminDashboard      = lazy(() => import('../pages/admin/AdminDashboard'))
-const AdminProductsPage   = lazy(() => import('../pages/admin/AdminProductsPage'))
-const AdminOrdersPage     = lazy(() => import('../pages/admin/AdminOrdersPage'))
-const AdminOrderDetailPage = lazy(() => import('../pages/admin/AdminOrderDetailPage'))
-const AdminCustomersPage  = lazy(() => import('../pages/admin/AdminCustomersPage'))
-const AdminCategoriesPage = lazy(() => import('../pages/admin/AdminCategoriesPage'))
-const PosPage             = lazy(() => import('../pages/admin/pos/PosPage'))
+const AdminDashboard          = lazy(() => import('../pages/admin/AdminDashboard'))
+const AdminProductsPage       = lazy(() => import('../pages/admin/AdminProductsPage'))
+const AdminOrdersPage         = lazy(() => import('../pages/admin/AdminOrdersPage'))
+const AdminOrderDetailPage    = lazy(() => import('../pages/admin/AdminOrderDetailPage'))
+const AdminCustomersPage      = lazy(() => import('../pages/admin/AdminCustomersPage'))
+const AdminCustomerDetailPage = lazy(() => import('../pages/admin/AdminCustomerDetailPage'))
+const AdminCategoriesPage     = lazy(() => import('../pages/admin/AdminCategoriesPage'))
+const AdminAnalyticsPage      = lazy(() => import('../pages/admin/AdminAnalyticsPage'))
+const PosPage                 = lazy(() => import('../pages/admin/pos/PosPage'))
 
 // ── Variants page ──────────────────────────────────────────────────────────
 const pageVariants = {
@@ -139,13 +141,15 @@ export default function AppRouter() {
             </ProtectedRoute>
           }
         >
-          <Route index              element={<AdminDashboard />} />
-          <Route path="products"    element={<AdminProductsPage />} />
-          <Route path="orders"      element={<AdminOrdersPage />} />
-          <Route path="orders/:id"  element={<AdminOrderDetailPage />} />
-          <Route path="customers"   element={<AdminCustomersPage />} />
-          <Route path="categories"  element={<AdminCategoriesPage />} />
-          <Route path="pos"         element={<PosPage />} />
+          <Route index                    element={<AdminDashboard />} />
+          <Route path="products"          element={<AdminProductsPage />} />
+          <Route path="orders"            element={<AdminOrdersPage />} />
+          <Route path="orders/:id"        element={<AdminOrderDetailPage />} />
+          <Route path="customers"         element={<AdminCustomersPage />} />
+          <Route path="customers/:id"     element={<AdminCustomerDetailPage />} />
+          <Route path="categories"        element={<AdminCategoriesPage />} />
+          <Route path="analytics"         element={<AdminAnalyticsPage />} />
+          <Route path="pos"               element={<PosPage />} />
         </Route>
 
         {/* 404 */}

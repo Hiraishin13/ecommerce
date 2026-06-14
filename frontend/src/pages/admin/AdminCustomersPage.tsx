@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Search } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import DataTable, { type Column } from '../../components/ui/DataTable'
 import Input from '../../components/ui/Input'
 import Pagination from '../../components/ui/Pagination'
@@ -91,6 +92,21 @@ export default function AdminCustomersPage() {
           <span className="text-xs text-muted">
             {new Date(c.created_at).toLocaleDateString('en-GB')}
           </span>
+        )
+      },
+    },
+    {
+      key: 'actions',
+      label: '',
+      render: (row) => {
+        const c = row as unknown as Customer
+        return (
+          <Link
+            to={`/admin/customers/${c.id}`}
+            className="text-xs text-muted hover:text-black transition-colors uppercase tracking-wider"
+          >
+            View
+          </Link>
         )
       },
     },

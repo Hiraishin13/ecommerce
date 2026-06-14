@@ -8,6 +8,7 @@ import { formatPrice } from '../../utils/formatPrice'
 import OrderStatusBadge from '../account/components/OrderStatusBadge'
 import Spinner from '../../components/ui/Spinner'
 import Button from '../../components/ui/Button'
+import Input from '../../components/ui/Input'
 
 const STATUS_OPTIONS: OrderStatus[] = [
   'pending', 'paid', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded',
@@ -25,10 +26,13 @@ function getItemImage(productImages: string | undefined): string | null {
 
 export default function AdminOrderDetailPage() {
   const { id } = useParams<{ id: string }>()
-  const [order, setOrder] = useState<Order | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [updating, setUpdating] = useState(false)
-  const [newStatus, setNewStatus] = useState<OrderStatus>('pending')
+  const [order, setOrder]           = useState<Order | null>(null)
+  const [loading, setLoading]       = useState(true)
+  const [updating, setUpdating]     = useState(false)
+  const [newStatus, setNewStatus]   = useState<OrderStatus>('pending')
+  const [tracking, setTracking]     = useState('')
+  const [adminNotes, setAdminNotes] = useState('')
+  const [savingMeta, setSavingMeta] = useState(false)
 
   useEffect(() => {
     if (!id) return
@@ -38,6 +42,9 @@ export default function AdminOrderDetailPage() {
         const o: Order = res.data?.order ?? res.data
         setOrder(o)
         setNewStatus(o.status)
+        const raw = o as unknown as Record<string,unknown>
+        setTracking((raw.tracking_number as string) ?? '')
+        setAdminNotes((raw.admin_notes as string) ?? '')
       })
       .catch(() => {})
       .finally(() => setLoading(false))
@@ -55,6 +62,22 @@ export default function AdminOrderDetailPage() {
       toast.error('Failed to update status')
     } finally {
       setUpdating(false)
+    }
+  }
+
+  const handleSaveMeta = async () => {
+    if (!order) return
+    setSavingMeta(true)
+    try {
+      await api.patch(`/admin/orders/${order.id}/meta`, {
+        tracking_number: tracking,
+        admin_notes:     adminNotes,
+      })
+      toast.success('Order updated')
+    } catch {
+      toast.error('Failed to save')
+    } finally {
+      setSavingMeta(false)
     }
   }
 
@@ -100,15 +123,32 @@ export default function AdminOrderDetailPage() {
               <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
             ))}
           </select>
-          <Button
-            onClick={handleStatusUpdate}
-            loading={updating}
-            disabled={newStatus === order.status}
-            size="sm"
-          >
+          <Button onClick={handleStatusUpdate} loading={updating} disabled={newStatus === order.status} size="sm">
             Update
           </Button>
         </div>
+      </div>
+
+      {/* Tracking + Admin notes */}
+      <div className="mb-6 p-4 border border-accent space-y-3">
+        <p className="text-xs font-bold uppercase tracking-wider">Suivi &amp; Notes internes</p>
+        <Input
+          label="Numéro de suivi"
+          value={tracking}
+          onChange={(e) => setTracking(e.target.value)}
+          placeholder="EX123456789FR"
+        />
+        <div>
+          <label className="block text-xs font-bold uppercase tracking-wider mb-1.5">Notes internes</label>
+          <textarea
+            className="w-full border border-accent px-4 py-3 text-sm focus:outline-none focus:border-black bg-white resize-none"
+            rows={3}
+            value={adminNotes}
+            onChange={(e) => setAdminNotes(e.target.value)}
+            placeholder="Notes visibles uniquement par l'admin..."
+          />
+        </div>
+        <Button size="sm" onClick={handleSaveMeta} loading={savingMeta}>Save</Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

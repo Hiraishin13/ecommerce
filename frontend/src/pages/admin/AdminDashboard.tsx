@@ -20,6 +20,8 @@ export default function AdminDashboard() {
   const [orders, setOrders]   = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
 
+  const [customerCount, setCustomerCount] = useState<number | null>(null)
+
   useEffect(() => {
     api
       .get('/admin/orders?limit=10')
@@ -30,6 +32,11 @@ export default function AdminDashboard() {
       })
       .catch(() => setOrders([]))
       .finally(() => setLoading(false))
+
+    api
+      .get('/admin/users?limit=1')
+      .then((res) => setCustomerCount(res.data?.total ?? null))
+      .catch(() => {})
   }, [])
 
   const totalRevenue = orders
@@ -37,10 +44,10 @@ export default function AdminDashboard() {
     .reduce((sum, o) => sum + (o.total ?? 0), 0)
 
   const kpis: KPI[] = [
-    { label: 'Total Orders',   value: orders.length,                                   icon: ShoppingCart, color: 'bg-black text-white'         },
-    { label: 'Revenue',        value: formatPrice(totalRevenue),                        icon: DollarSign,   color: 'bg-[#388E3C] text-white'     },
-    { label: 'Pending Orders', value: orders.filter((o) => o.status === 'pending').length, icon: Package,  color: 'bg-[#F57C00] text-white'     },
-    { label: 'Customers',      value: '—',                                              icon: Users,        color: 'bg-[#1A1A1A] text-white'     },
+    { label: 'Total Orders',   value: orders.length,                                      icon: ShoppingCart, color: 'bg-black text-white'     },
+    { label: 'Revenue',        value: formatPrice(totalRevenue),                           icon: DollarSign,   color: 'bg-[#388E3C] text-white' },
+    { label: 'Pending Orders', value: orders.filter((o) => o.status === 'pending').length, icon: Package,      color: 'bg-[#F57C00] text-white' },
+    { label: 'Customers',      value: customerCount ?? '—',                                icon: Users,        color: 'bg-[#1A1A1A] text-white' },
   ]
 
   return (

@@ -15,6 +15,10 @@ export interface Product {
   category_id?: number
   category_name?: string
   category_slug?: string
+  category?: { id?: number; name?: string; slug?: string }
+  weight?: number
+  meta_title?: string
+  meta_desc?: string
   created_at: string
 }
 

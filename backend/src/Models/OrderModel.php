@@ -176,6 +176,51 @@ class OrderModel extends Model
         return $stmt->execute([$status, $id]);
     }
 
+    public function updateMeta(int $id, array $fields): bool
+    {
+        $sets = [];
+        $vals = [];
+        foreach ($fields as $col => $val) {
+            $sets[] = "`{$col}` = ?";
+            $vals[] = $val;
+        }
+        $vals[] = $id;
+        $stmt = $this->db->prepare('UPDATE orders SET ' . implode(', ', $sets) . ' WHERE id = ?');
+        return $stmt->execute($vals);
+    }
+
+    public function getStats(int $months = 6): array
+    {
+        $stmt = $this->db->prepare(
+            "SELECT
+                DATE_FORMAT(created_at, '%Y-%m') AS month,
+                COUNT(*) AS orders,
+                SUM(total_amount) AS revenue
+             FROM orders
+             WHERE status NOT IN ('cancelled','refunded')
+               AND created_at >= DATE_SUB(NOW(), INTERVAL ? MONTH)
+             GROUP BY DATE_FORMAT(created_at, '%Y-%m')
+             ORDER BY month ASC"
+        );
+        $stmt->execute([$months]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getTopProducts(int $limit = 5): array
+    {
+        $stmt = $this->db->prepare(
+            "SELECT oi.product_name, SUM(oi.quantity) AS qty_sold, SUM(oi.subtotal) AS revenue
+             FROM order_items oi
+             JOIN orders o ON o.id = oi.order_id
+             WHERE o.status NOT IN ('cancelled','refunded')
+             GROUP BY oi.product_id, oi.product_name
+             ORDER BY qty_sold DESC
+             LIMIT ?"
+        );
+        $stmt->execute([$limit]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public function updateStripePaymentIntent(int $id, string $piId): bool
     {
         $stmt = $this->db->prepare('UPDATE orders SET stripe_pi_id = ? WHERE id = ?');
