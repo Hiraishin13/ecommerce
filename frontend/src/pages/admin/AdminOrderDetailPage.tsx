@@ -2,16 +2,26 @@ import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { orderService, type Order, type OrderStatus } from '../../services/order.service'
+import api from '../../services/api'
+import { type Order, type OrderStatus } from '../../services/order.service'
 import { formatPrice } from '../../utils/formatPrice'
 import OrderStatusBadge from '../account/components/OrderStatusBadge'
 import Spinner from '../../components/ui/Spinner'
 import Button from '../../components/ui/Button'
-import api from '../../services/api'
 
 const STATUS_OPTIONS: OrderStatus[] = [
-  'pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled',
+  'pending', 'paid', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded',
 ]
+
+function getItemImage(productImages: string | undefined): string | null {
+  if (!productImages) return null
+  try {
+    const parsed = JSON.parse(productImages)
+    return Array.isArray(parsed) ? parsed[0] ?? null : null
+  } catch {
+    return productImages.startsWith('http') ? productImages : null
+  }
+}
 
 export default function AdminOrderDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -22,9 +32,13 @@ export default function AdminOrderDetailPage() {
 
   useEffect(() => {
     if (!id) return
-    orderService
-      .getOrder(Number(id))
-      .then((o) => { setOrder(o); setNewStatus(o.status) })
+    api
+      .get(`/admin/orders/${id}`)
+      .then((res) => {
+        const o: Order = res.data?.order ?? res.data
+        setOrder(o)
+        setNewStatus(o.status)
+      })
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [id])
@@ -33,8 +47,9 @@ export default function AdminOrderDetailPage() {
     if (!order) return
     setUpdating(true)
     try {
-      const { data } = await api.put<Order>(`/orders/${order.id}/status`, { status: newStatus })
-      setOrder(data)
+      const res = await api.patch(`/admin/orders/${order.id}/status`, { status: newStatus })
+      const updated: Order = res.data?.order ?? res.data
+      setOrder(updated)
       toast.success('Order status updated')
     } catch {
       toast.error('Failed to update status')
@@ -67,7 +82,7 @@ export default function AdminOrderDetailPage() {
           <ArrowLeft size={16} />
         </Link>
         <h1 className="text-xl font-black uppercase tracking-wider">
-          Order #{order.order_number}
+          Order #{order.order_number ?? order.id}
         </h1>
         <OrderStatusBadge status={order.status} />
       </div>
@@ -101,40 +116,42 @@ export default function AdminOrderDetailPage() {
         <div className="md:col-span-2">
           <h2 className="text-xs font-bold uppercase tracking-wider mb-3">Items</h2>
           <div className="space-y-2">
-            {order.items.map((item) => (
-              <div key={item.id} className="flex items-center gap-4 p-3 border border-accent">
-                <div className="w-14 h-14 bg-accent flex-shrink-0">
-                  {item.image && (
-                    <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold truncate">{item.name}</p>
-                  <p className="text-xs text-muted">
-                    {formatPrice(item.price)} × {item.quantity}
+            {(order.items ?? []).map((item) => {
+              const img = getItemImage((item as Record<string, string>).product_images)
+              return (
+                <div key={item.id} className="flex items-center gap-4 p-3 border border-accent">
+                  <div className="w-14 h-14 bg-accent flex-shrink-0">
+                    {img && <img src={img} alt={item.product_name} className="w-full h-full object-cover" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold truncate">{item.product_name}</p>
+                    <p className="text-xs text-muted">
+                      {formatPrice(item.unit_price)} × {item.quantity}
+                    </p>
+                  </div>
+                  <p className="text-sm font-bold">
+                    {formatPrice(item.unit_price * item.quantity)}
                   </p>
                 </div>
-                <p className="text-sm font-bold">
-                  {formatPrice(item.price * item.quantity)}
-                </p>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
 
-        {/* Customer / Shipping */}
+        {/* Shipping */}
         <div>
           <h2 className="text-xs font-bold uppercase tracking-wider mb-3">Shipping Address</h2>
           <div className="p-4 border border-accent text-sm space-y-1">
-            <p className="font-semibold">
-              {order.shipping_address.first_name} {order.shipping_address.last_name}
-            </p>
-            <p className="text-muted">{order.shipping_address.address}</p>
-            <p className="text-muted">
-              {order.shipping_address.city}, {order.shipping_address.postal_code}
-            </p>
-            <p className="text-muted">{order.shipping_address.country}</p>
-            <p className="text-muted">{order.shipping_address.phone}</p>
+            {order.shipping_name && <p className="font-semibold">{order.shipping_name}</p>}
+            {order.user_email && <p className="text-muted text-xs">{order.user_email}</p>}
+            {order.shipping_address && <p className="text-muted">{order.shipping_address}</p>}
+            {(order.shipping_city || order.shipping_zip) && (
+              <p className="text-muted">
+                {[order.shipping_city, order.shipping_zip].filter(Boolean).join(', ')}
+              </p>
+            )}
+            {order.shipping_country && <p className="text-muted">{order.shipping_country}</p>}
+            {order.shipping_phone && <p className="text-muted">{order.shipping_phone}</p>}
           </div>
         </div>
 
@@ -144,22 +161,24 @@ export default function AdminOrderDetailPage() {
           <div className="p-4 border border-accent space-y-2 text-sm">
             <div className="flex justify-between">
               <span className="text-muted">Subtotal</span>
-              <span>{formatPrice(order.subtotal)}</span>
+              <span>{formatPrice(order.subtotal ?? order.total ?? 0)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted">Shipping</span>
-              <span>{order.shipping === 0 ? 'Free' : formatPrice(order.shipping)}</span>
+              <span>{(order.shipping_fee ?? 0) === 0 ? 'Free' : formatPrice(order.shipping_fee ?? 0)}</span>
             </div>
             <div className="flex justify-between pt-2 border-t border-accent font-bold">
               <span>Total</span>
-              <span>{formatPrice(order.total)}</span>
+              <span>{formatPrice(order.total ?? order.total_amount ?? 0)}</span>
             </div>
-            <div className="pt-2 border-t border-accent text-xs">
-              <span className="text-muted">Payment: </span>
-              <span className="font-bold uppercase tracking-wider">
-                {order.payment_method.replace(/_/g, ' ')}
-              </span>
-            </div>
+            {order.payment_method && (
+              <div className="pt-2 border-t border-accent text-xs">
+                <span className="text-muted">Payment: </span>
+                <span className="font-bold uppercase tracking-wider">
+                  {order.payment_method.replace(/_/g, ' ')}
+                </span>
+              </div>
+            )}
             <div className="text-xs">
               <span className="text-muted">Ordered: </span>
               <span>{new Date(order.created_at).toLocaleString('en-GB')}</span>

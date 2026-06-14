@@ -3,11 +3,12 @@ import { cn } from '../../../utils/cn'
 
 const statusConfig: Record<OrderStatus, { label: string; color: string }> = {
   pending: { label: 'Pending', color: 'bg-[#F57C00] text-white' },
-  confirmed: { label: 'Confirmed', color: 'bg-blue-600 text-white' },
+  paid: { label: 'Paid', color: 'bg-blue-600 text-white' },
   processing: { label: 'Processing', color: 'bg-blue-800 text-white' },
   shipped: { label: 'Shipped', color: 'bg-[#1A1A1A] text-white' },
   delivered: { label: 'Delivered', color: 'bg-[#388E3C] text-white' },
   cancelled: { label: 'Cancelled', color: 'bg-[#D32F2F] text-white' },
+  refunded: { label: 'Refunded', color: 'bg-gray-500 text-white' },
 }
 
 interface Props {

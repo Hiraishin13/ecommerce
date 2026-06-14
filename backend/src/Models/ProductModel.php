@@ -209,6 +209,25 @@ class ProductModel extends Model
         return $stmt->execute([$id]);
     }
 
+    /** Recherche rapide pour la caisse POS (LIKE sur nom + SKU, avec stock) */
+    public function rechercherCaisse(string $query, int $limit = 10): array
+    {
+        $like = '%' . $query . '%';
+        $stmt = $this->db->prepare(
+            "SELECT p.id, p.name, p.slug, p.sku, p.price, p.stock,
+                    p.images, p.a_des_variantes,
+                    c.name AS category_name
+             FROM products p
+             LEFT JOIN categories c ON c.id = p.category_id
+             WHERE p.is_active = 1
+               AND (p.name LIKE ? OR p.sku LIKE ?)
+             ORDER BY p.name ASC
+             LIMIT ?"
+        );
+        $stmt->execute([$like, $like, $limit]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public function search(string $query, int $limit = 20): array
     {
         $stmt = $this->db->prepare(

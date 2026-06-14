@@ -1,7 +1,8 @@
 import { useEffect, useState, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
-import { orderService, type Order, type OrderStatus } from '../../services/order.service'
+import api from '../../services/api'
+import { type Order, type OrderStatus } from '../../services/order.service'
 import { formatPrice } from '../../utils/formatPrice'
 import OrderStatusBadge from '../account/components/OrderStatusBadge'
 import DataTable, { type Column } from '../../components/ui/DataTable'
@@ -11,11 +12,12 @@ import { cn } from '../../utils/cn'
 const STATUS_FILTERS: { value: string; label: string }[] = [
   { value: '', label: 'All' },
   { value: 'pending', label: 'Pending' },
-  { value: 'confirmed', label: 'Confirmed' },
+  { value: 'paid', label: 'Paid' },
   { value: 'processing', label: 'Processing' },
   { value: 'shipped', label: 'Shipped' },
   { value: 'delivered', label: 'Delivered' },
   { value: 'cancelled', label: 'Cancelled' },
+  { value: 'refunded', label: 'Refunded' },
 ]
 
 export default function AdminOrdersPage() {
@@ -25,21 +27,23 @@ export default function AdminOrdersPage() {
   const [totalPages, setTotalPages] = useState(1)
   const [statusFilter, setStatusFilter] = useState('')
 
-  const loadOrders = useCallback(async () => {
+  const loadOrders = useCallback(() => {
     setLoading(true)
-    try {
-      const res = await orderService.getOrders(page)
-      let orders = res.orders ?? []
-      if (statusFilter) {
-        orders = orders.filter((o) => o.status === statusFilter)
-      }
-      setOrders(orders)
-      setTotalPages(res.totalPages ?? 1)
-    } catch {
-      setOrders([])
-    } finally {
-      setLoading(false)
-    }
+    api
+      .get('/admin/orders', {
+        params: {
+          page,
+          limit: 20,
+          ...(statusFilter && { status: statusFilter }),
+        },
+      })
+      .then((res) => {
+        const payload = res.data
+        setOrders(payload?.orders ?? [])
+        setTotalPages(payload?.pagination?.total_pages ?? 1)
+      })
+      .catch(() => setOrders([]))
+      .finally(() => setLoading(false))
   }, [page, statusFilter])
 
   useEffect(() => { loadOrders() }, [loadOrders])
@@ -50,7 +54,7 @@ export default function AdminOrdersPage() {
       label: 'Order #',
       render: (row) => {
         const o = row as unknown as Order
-        return <span className="text-xs font-bold">#{o.order_number}</span>
+        return <span className="text-xs font-bold">#{o.order_number ?? o.id}</span>
       },
     },
     {
@@ -71,9 +75,10 @@ export default function AdminOrdersPage() {
       render: (row) => {
         const o = row as unknown as Order
         return (
-          <span className="text-xs">
-            {o.shipping_address.first_name} {o.shipping_address.last_name}
-          </span>
+          <div>
+            <p className="text-xs font-bold">{o.shipping_name ?? o.user_name ?? '—'}</p>
+            <p className="text-xs text-muted">{o.user_email ?? ''}</p>
+          </div>
         )
       },
     },
@@ -90,7 +95,7 @@ export default function AdminOrdersPage() {
       label: 'Total',
       render: (row) => {
         const o = row as unknown as Order
-        return <span className="text-xs font-bold">{formatPrice(o.total)}</span>
+        return <span className="text-xs font-bold">{formatPrice(o.total ?? o.total_amount ?? 0)}</span>
       },
     },
     {

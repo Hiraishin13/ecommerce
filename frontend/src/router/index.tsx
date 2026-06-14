@@ -37,6 +37,7 @@ const AdminOrdersPage = lazy(() => import('../pages/admin/AdminOrdersPage'))
 const AdminOrderDetailPage = lazy(() => import('../pages/admin/AdminOrderDetailPage'))
 const AdminCustomersPage = lazy(() => import('../pages/admin/AdminCustomersPage'))
 const AdminCategoriesPage = lazy(() => import('../pages/admin/AdminCategoriesPage'))
+const PosPage = lazy(() => import('../pages/admin/pos/PosPage'))
 
 function MainLayout({ children }: { children: ReactNode }) {
   return (
@@ -122,6 +123,7 @@ export default function AppRouter() {
           <Route path="orders/:id" element={<AdminOrderDetailPage />} />
           <Route path="customers" element={<AdminCustomersPage />} />
           <Route path="categories" element={<AdminCategoriesPage />} />
+          <Route path="pos" element={<PosPage />} />
         </Route>
 
         {/* 404 */}

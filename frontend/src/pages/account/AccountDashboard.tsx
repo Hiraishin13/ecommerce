@@ -93,7 +93,7 @@ export default function AccountDashboard() {
                   </p>
                   <p className="text-xs text-muted mt-0.5">
                     {new Date(order.created_at).toLocaleDateString('en-GB')} ·{' '}
-                    {order.items.length} {order.items.length === 1 ? 'item' : 'items'}
+                    {(order.items?.length ?? 0)} {(order.items?.length ?? 0) === 1 ? 'item' : 'items'}
                   </p>
                 </div>
                 <div className="flex items-center gap-4">

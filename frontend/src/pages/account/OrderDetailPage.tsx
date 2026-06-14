@@ -1,6 +1,6 @@
 import { useEffect, useState, type ElementType } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { ArrowLeft, Package, Truck, CheckCircle, XCircle, Clock, AlertCircle } from 'lucide-react'
+import { ArrowLeft, Package, Truck, CheckCircle, XCircle, Clock, CreditCard } from 'lucide-react'
 import { orderService, type Order, type OrderStatus } from '../../services/order.service'
 import { formatPrice } from '../../utils/formatPrice'
 import Spinner from '../../components/ui/Spinner'
@@ -8,15 +8,25 @@ import Button from '../../components/ui/Button'
 import OrderStatusBadge from './components/OrderStatusBadge'
 import toast from 'react-hot-toast'
 
-const STATUS_STEPS: OrderStatus[] = ['pending', 'confirmed', 'processing', 'shipped', 'delivered']
+const STATUS_STEPS: OrderStatus[] = ['pending', 'paid', 'processing', 'shipped', 'delivered']
 
 const stepIcons: Record<string, ElementType> = {
   pending: Clock,
-  confirmed: AlertCircle,
+  paid: CreditCard,
   processing: Package,
   shipped: Truck,
   delivered: CheckCircle,
   cancelled: XCircle,
+}
+
+function getItemImage(productImages: string | undefined): string | null {
+  if (!productImages) return null
+  try {
+    const parsed = JSON.parse(productImages)
+    return Array.isArray(parsed) ? parsed[0] ?? null : null
+  } catch {
+    return productImages.startsWith('http') ? productImages : null
+  }
 }
 
 export default function OrderDetailPage() {
@@ -75,7 +85,7 @@ export default function OrderDetailPage() {
           <ArrowLeft size={16} />
         </Link>
         <h1 className="text-xl font-black uppercase tracking-wider">
-          Order #{order.order_number}
+          Order #{order.order_number ?? order.id}
         </h1>
         <OrderStatusBadge status={order.status} />
       </div>
@@ -118,22 +128,23 @@ export default function OrderDetailPage() {
         <div className="md:col-span-2">
           <h2 className="text-xs font-bold uppercase tracking-wider mb-3">Items</h2>
           <div className="space-y-2">
-            {order.items.map((item) => (
-              <div key={item.id} className="flex items-center gap-4 p-3 border border-accent">
-                <div className="w-14 h-14 bg-accent flex-shrink-0">
-                  {item.image && (
-                    <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-                  )}
+            {(order.items ?? []).map((item) => {
+              const img = getItemImage((item as Record<string, string>).product_images)
+              return (
+                <div key={item.id} className="flex items-center gap-4 p-3 border border-accent">
+                  <div className="w-14 h-14 bg-accent flex-shrink-0">
+                    {img && <img src={img} alt={item.product_name} className="w-full h-full object-cover" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold truncate">{item.product_name}</p>
+                    <p className="text-xs text-muted">Qty: {item.quantity}</p>
+                  </div>
+                  <p className="text-sm font-bold flex-shrink-0">
+                    {formatPrice(item.unit_price * item.quantity)}
+                  </p>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold truncate">{item.name}</p>
-                  <p className="text-xs text-muted">Qty: {item.quantity}</p>
-                </div>
-                <p className="text-sm font-bold flex-shrink-0">
-                  {formatPrice(item.price * item.quantity)}
-                </p>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
 
@@ -141,15 +152,15 @@ export default function OrderDetailPage() {
         <div>
           <h2 className="text-xs font-bold uppercase tracking-wider mb-3">Shipping Address</h2>
           <div className="p-4 border border-accent text-sm space-y-1">
-            <p className="font-semibold">
-              {order.shipping_address.first_name} {order.shipping_address.last_name}
-            </p>
-            <p className="text-muted">{order.shipping_address.address}</p>
-            <p className="text-muted">
-              {order.shipping_address.city}, {order.shipping_address.postal_code}
-            </p>
-            <p className="text-muted">{order.shipping_address.country}</p>
-            <p className="text-muted">{order.shipping_address.phone}</p>
+            {order.shipping_name && <p className="font-semibold">{order.shipping_name}</p>}
+            {order.shipping_address && <p className="text-muted">{order.shipping_address}</p>}
+            {(order.shipping_city || order.shipping_zip) && (
+              <p className="text-muted">
+                {[order.shipping_city, order.shipping_zip].filter(Boolean).join(', ')}
+              </p>
+            )}
+            {order.shipping_country && <p className="text-muted">{order.shipping_country}</p>}
+            {order.shipping_phone && <p className="text-muted">{order.shipping_phone}</p>}
           </div>
         </div>
 
@@ -159,26 +170,30 @@ export default function OrderDetailPage() {
           <div className="p-4 border border-accent space-y-2 text-sm">
             <div className="flex justify-between">
               <span className="text-muted">Subtotal</span>
-              <span>{formatPrice(order.subtotal)}</span>
+              <span>{formatPrice(order.subtotal ?? order.total ?? 0)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted">Shipping</span>
-              <span>{order.shipping === 0 ? 'Free' : formatPrice(order.shipping)}</span>
+              <span>{(order.shipping_fee ?? 0) === 0 ? 'Free' : formatPrice(order.shipping_fee ?? 0)}</span>
             </div>
             <div className="flex justify-between pt-2 border-t border-accent font-bold">
               <span>Total</span>
-              <span>{formatPrice(order.total)}</span>
+              <span>{formatPrice(order.total ?? order.total_amount ?? 0)}</span>
             </div>
-            <div className="pt-2 border-t border-accent">
-              <span className="text-xs text-muted uppercase tracking-wider">Payment: </span>
-              <span className="text-xs font-bold uppercase tracking-wider">{order.payment_method.replace(/_/g, ' ')}</span>
-            </div>
+            {order.payment_method && (
+              <div className="pt-2 border-t border-accent">
+                <span className="text-xs text-muted uppercase tracking-wider">Payment: </span>
+                <span className="text-xs font-bold uppercase tracking-wider">
+                  {order.payment_method.replace(/_/g, ' ')}
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
       {/* Actions */}
-      {(order.status === 'pending' || order.status === 'confirmed') && (
+      {order.status === 'pending' && (
         <div className="mt-6">
           <Button
             variant="secondary"

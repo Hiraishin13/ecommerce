@@ -8,6 +8,8 @@ export interface OrderItem {
   unit_price: number
   quantity: number
   subtotal: number
+  product_images?: string
+  product_slug?: string
 }
 
 export interface ShippingAddress {
@@ -21,7 +23,7 @@ export interface ShippingAddress {
 
 export type OrderStatus =
   | 'pending'
-  | 'confirmed'
+  | 'paid'
   | 'processing'
   | 'shipped'
   | 'delivered'
@@ -37,6 +39,16 @@ export interface Order {
   discount: number
   shipping_fee: number
   total: number
+  total_amount?: number
+  shipping_name?: string
+  shipping_email?: string
+  shipping_phone?: string
+  shipping_address?: string
+  shipping_city?: string
+  shipping_zip?: string
+  shipping_country?: string
+  user_name?: string
+  user_email?: string
   payment_method?: string
   tracking_number?: string
   notes?: string

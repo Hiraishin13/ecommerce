@@ -1,20 +1,29 @@
 import { useState } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
-import { ShoppingBag, User, Search, Menu, X, ChevronDown } from 'lucide-react'
+import {
+  ShoppingBag, Search, Menu, X,
+  LayoutDashboard, ShoppingCart, MapPin, UserCog,
+  Heart, LogOut, Download, LogIn, UserPlus, User,
+} from 'lucide-react'
 import { useCartStore } from '../../store/cartStore'
 import { useAuth } from '../../hooks/useAuth'
 import { cn } from '../../utils/cn'
 
 export default function Navbar() {
-  const [mobileOpen, setMobileOpen] = useState(false)
-  const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const [mobileOpen, setMobileOpen]   = useState(false)
+  const [dropdownOpen, setDropdownOpen] = useState(false)
   const cartCount = useCartStore((s) => s.count())
   const { user, isAuthenticated, logout, isAdmin } = useAuth()
   const navigate = useNavigate()
 
+  const closeAll = () => {
+    setDropdownOpen(false)
+    setMobileOpen(false)
+  }
+
   const handleLogout = async () => {
     await logout()
-    setUserMenuOpen(false)
+    closeAll()
     navigate('/')
   }
 
@@ -28,6 +37,7 @@ export default function Navbar() {
     <nav className="sticky top-0 z-40 bg-black text-white shadow-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
+
           {/* Logo */}
           <Link
             to="/"
@@ -56,12 +66,13 @@ export default function Navbar() {
           </div>
 
           {/* Right actions */}
-          <div className="flex items-center gap-4">
-            {/* Search icon */}
+          <div className="flex items-center gap-3">
+
+            {/* Search */}
             <Link
               to="/search"
               className="p-2 opacity-70 hover:opacity-100 transition-opacity"
-              aria-label="Search"
+              aria-label="Rechercher"
             >
               <Search size={18} />
             </Link>
@@ -70,7 +81,7 @@ export default function Navbar() {
             <Link
               to="/cart"
               className="p-2 relative opacity-70 hover:opacity-100 transition-opacity"
-              aria-label={`Cart (${cartCount} items)`}
+              aria-label={`Panier (${cartCount})`}
             >
               <ShoppingBag size={18} />
               {cartCount > 0 && (
@@ -80,78 +91,133 @@ export default function Navbar() {
               )}
             </Link>
 
-            {/* User menu */}
+            {/* Avatar / User dropdown — desktop */}
             <div className="relative hidden md:block">
-              {isAuthenticated ? (
-                <>
-                  <button
-                    onClick={() => setUserMenuOpen(!userMenuOpen)}
-                    className="flex items-center gap-1 p-2 opacity-70 hover:opacity-100 transition-opacity text-xs font-bold uppercase tracking-wider"
-                  >
-                    <User size={18} />
-                    <span className="hidden lg:block">{user?.name?.split(' ')[0]}</span>
-                    <ChevronDown size={14} />
-                  </button>
+              <button
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                aria-label="Mon compte"
+                className="relative p-2 opacity-70 hover:opacity-100 transition-opacity focus:outline-none"
+              >
+                <User size={18} />
+                {isAuthenticated && (
+                  <span className="absolute top-1 right-1 w-2 h-2 bg-green-400 rounded-full" />
+                )}
+              </button>
 
-                  {userMenuOpen && (
-                    <>
-                      <div
-                        className="fixed inset-0 z-10"
-                        onClick={() => setUserMenuOpen(false)}
-                      />
-                      <div className="absolute right-0 mt-1 w-48 bg-white text-black shadow-lg z-20">
-                        <div className="px-4 py-3 border-b border-accent">
-                          <p className="text-xs font-bold truncate">{user?.name}</p>
-                          <p className="text-xs text-muted truncate">{user?.email}</p>
+              {dropdownOpen && (
+                <>
+                  {/* Overlay pour fermer */}
+                  <div className="fixed inset-0 z-10" onClick={() => setDropdownOpen(false)} />
+
+                  <div className="absolute right-0 mt-2 w-56 bg-white text-black shadow-xl z-20 py-1">
+                    {isAuthenticated ? (
+                      <>
+                        {/* Favoris */}
+                        <Link
+                          to="/account/wishlist"
+                          onClick={closeAll}
+                          className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-bold hover:bg-[#F5F5F5] transition-colors border-b border-[#EBEBEB]"
+                        >
+                          <Heart size={14} className="text-red-500" />
+                          Favoris
+                        </Link>
+
+                        {/* Greeting */}
+                        <div className="px-4 py-3 border-b border-[#EBEBEB]">
+                          <p className="text-[10px] text-muted uppercase tracking-wider mb-0.5">Bonjour</p>
+                          <p className="text-xs font-black truncate">{user?.name}</p>
                         </div>
+
+                        {/* Liens compte */}
                         <Link
                           to="/account"
-                          onClick={() => setUserMenuOpen(false)}
-                          className="block px-4 py-2 text-xs uppercase tracking-wider hover:bg-accent transition-colors"
+                          onClick={closeAll}
+                          className="flex items-center gap-2.5 px-4 py-2.5 text-xs hover:bg-[#F5F5F5] transition-colors"
                         >
-                          My Account
+                          <LayoutDashboard size={13} className="text-muted" />
+                          Tableau de bord
                         </Link>
                         <Link
                           to="/account/orders"
-                          onClick={() => setUserMenuOpen(false)}
-                          className="block px-4 py-2 text-xs uppercase tracking-wider hover:bg-accent transition-colors"
+                          onClick={closeAll}
+                          className="flex items-center gap-2.5 px-4 py-2.5 text-xs hover:bg-[#F5F5F5] transition-colors"
                         >
-                          Orders
+                          <ShoppingCart size={13} className="text-muted" />
+                          Commandes
                         </Link>
+                        <Link
+                          to="/account"
+                          onClick={closeAll}
+                          className="flex items-center gap-2.5 px-4 py-2.5 text-xs hover:bg-[#F5F5F5] transition-colors"
+                        >
+                          <Download size={13} className="text-muted" />
+                          Téléchargements
+                        </Link>
+                        <Link
+                          to="/account/addresses"
+                          onClick={closeAll}
+                          className="flex items-center gap-2.5 px-4 py-2.5 text-xs hover:bg-[#F5F5F5] transition-colors"
+                        >
+                          <MapPin size={13} className="text-muted" />
+                          Adresses
+                        </Link>
+                        <Link
+                          to="/account/profile"
+                          onClick={closeAll}
+                          className="flex items-center gap-2.5 px-4 py-2.5 text-xs hover:bg-[#F5F5F5] transition-colors"
+                        >
+                          <UserCog size={13} className="text-muted" />
+                          Détails du compte
+                        </Link>
+
                         {isAdmin && (
                           <Link
                             to="/admin"
-                            onClick={() => setUserMenuOpen(false)}
-                            className="block px-4 py-2 text-xs uppercase tracking-wider hover:bg-accent transition-colors"
+                            onClick={closeAll}
+                            className="flex items-center gap-2.5 px-4 py-2.5 text-xs hover:bg-[#F5F5F5] transition-colors"
                           >
+                            <LayoutDashboard size={13} className="text-muted" />
                             Admin Panel
                           </Link>
                         )}
+
+                        {/* Déconnexion */}
                         <button
                           onClick={handleLogout}
-                          className="w-full text-left px-4 py-2 text-xs uppercase tracking-wider hover:bg-accent transition-colors border-t border-accent"
+                          className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs hover:bg-[#F5F5F5] transition-colors border-t border-[#EBEBEB] text-red-500"
                         >
-                          Logout
+                          <LogOut size={13} />
+                          Se déconnecter
                         </button>
-                      </div>
-                    </>
-                  )}
+                      </>
+                    ) : (
+                      <>
+                        {/* Non connecté */}
+                        <div className="px-4 py-3 border-b border-[#EBEBEB]">
+                          <p className="text-[10px] text-muted uppercase tracking-wider">Mon compte</p>
+                        </div>
+                        <Link
+                          to="/login"
+                          onClick={closeAll}
+                          className="flex items-center gap-2.5 px-4 py-3 text-xs font-bold hover:bg-[#F5F5F5] transition-colors"
+                        >
+                          <LogIn size={14} />
+                          Se connecter
+                        </Link>
+                        <div className="px-4 pb-3">
+                          <Link
+                            to="/register"
+                            onClick={closeAll}
+                            className="flex items-center justify-center gap-2 w-full py-2 bg-black text-white text-xs font-bold uppercase tracking-wider hover:bg-[#222] transition-colors"
+                          >
+                            <UserPlus size={13} />
+                            Créer un compte
+                          </Link>
+                        </div>
+                      </>
+                    )}
+                  </div>
                 </>
-              ) : (
-                <div className="flex items-center gap-3">
-                  <Link
-                    to="/login"
-                    className="text-xs font-bold uppercase tracking-widest opacity-70 hover:opacity-100 transition-opacity"
-                  >
-                    Login
-                  </Link>
-                  <Link
-                    to="/register"
-                    className="text-xs font-bold uppercase tracking-widest bg-white text-black px-3 py-1.5 hover:bg-accent transition-colors"
-                  >
-                    Register
-                  </Link>
-                </div>
               )}
             </div>
 
@@ -159,7 +225,7 @@ export default function Navbar() {
             <button
               className="md:hidden p-2 opacity-70 hover:opacity-100 transition-opacity"
               onClick={() => setMobileOpen(!mobileOpen)}
-              aria-label="Toggle menu"
+              aria-label="Menu"
             >
               {mobileOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
@@ -176,7 +242,7 @@ export default function Navbar() {
                 key={link.to}
                 to={link.to}
                 end={link.to === '/'}
-                onClick={() => setMobileOpen(false)}
+                onClick={closeAll}
                 className={({ isActive }) =>
                   cn(
                     'block py-2 text-xs font-bold uppercase tracking-widest',
@@ -187,47 +253,55 @@ export default function Navbar() {
                 {link.label}
               </NavLink>
             ))}
-            <div className="pt-2 border-t border-[#333]">
+
+            <div className="pt-3 border-t border-[#333] space-y-0.5">
               {isAuthenticated ? (
                 <>
-                  <Link
-                    to="/account"
-                    onClick={() => setMobileOpen(false)}
-                    className="block py-2 text-xs font-bold uppercase tracking-widest text-white/70"
-                  >
-                    My Account
+                  <p className="text-[10px] text-white/40 uppercase tracking-wider px-0 py-1">
+                    Bonjour, {user?.name}
+                  </p>
+                  <Link to="/account/wishlist" onClick={closeAll}
+                    className="flex items-center gap-2 py-2 text-xs font-bold text-white/70">
+                    <Heart size={13} className="text-red-400" /> Favoris
+                  </Link>
+                  <Link to="/account" onClick={closeAll}
+                    className="flex items-center gap-2 py-2 text-xs text-white/70">
+                    <LayoutDashboard size={13} /> Tableau de bord
+                  </Link>
+                  <Link to="/account/orders" onClick={closeAll}
+                    className="flex items-center gap-2 py-2 text-xs text-white/70">
+                    <ShoppingCart size={13} /> Commandes
+                  </Link>
+                  <Link to="/account/addresses" onClick={closeAll}
+                    className="flex items-center gap-2 py-2 text-xs text-white/70">
+                    <MapPin size={13} /> Adresses
+                  </Link>
+                  <Link to="/account/profile" onClick={closeAll}
+                    className="flex items-center gap-2 py-2 text-xs text-white/70">
+                    <UserCog size={13} /> Détails du compte
                   </Link>
                   {isAdmin && (
-                    <Link
-                      to="/admin"
-                      onClick={() => setMobileOpen(false)}
-                      className="block py-2 text-xs font-bold uppercase tracking-widest text-white/70"
-                    >
-                      Admin Panel
+                    <Link to="/admin" onClick={closeAll}
+                      className="flex items-center gap-2 py-2 text-xs text-white/70">
+                      <LayoutDashboard size={13} /> Admin Panel
                     </Link>
                   )}
                   <button
-                    onClick={() => { handleLogout(); setMobileOpen(false) }}
-                    className="block py-2 text-xs font-bold uppercase tracking-widest text-white/70 w-full text-left"
+                    onClick={handleLogout}
+                    className="flex items-center gap-2 py-2 text-xs text-red-400 w-full text-left"
                   >
-                    Logout
+                    <LogOut size={13} /> Se déconnecter
                   </button>
                 </>
               ) : (
                 <>
-                  <Link
-                    to="/login"
-                    onClick={() => setMobileOpen(false)}
-                    className="block py-2 text-xs font-bold uppercase tracking-widest text-white/70"
-                  >
-                    Login
+                  <Link to="/login" onClick={closeAll}
+                    className="flex items-center gap-2 py-2 text-xs font-bold text-white/70">
+                    <LogIn size={13} /> Se connecter
                   </Link>
-                  <Link
-                    to="/register"
-                    onClick={() => setMobileOpen(false)}
-                    className="block py-2 text-xs font-bold uppercase tracking-widest text-white/70"
-                  >
-                    Register
+                  <Link to="/register" onClick={closeAll}
+                    className="flex items-center gap-2 py-2 text-xs font-bold text-white/70">
+                    <UserPlus size={13} /> Créer un compte
                   </Link>
                 </>
               )}

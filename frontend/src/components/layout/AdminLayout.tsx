@@ -7,7 +7,7 @@ import {
   Tag,
   LogOut,
   Menu,
-  X,
+  CreditCard,
 } from 'lucide-react'
 import { useState } from 'react'
 import { useAuth } from '../../hooks/useAuth'
@@ -19,6 +19,7 @@ const adminLinks = [
   { to: '/admin/orders', label: 'Orders', icon: ShoppingCart },
   { to: '/admin/customers', label: 'Customers', icon: Users },
   { to: '/admin/categories', label: 'Categories', icon: Tag },
+  { to: '/admin/pos', label: 'Caisse POS', icon: CreditCard },
 ]
 
 export default function AdminLayout() {

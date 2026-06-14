@@ -13,6 +13,7 @@ use App\Controllers\Admin\AdminProductController;
 use App\Controllers\Admin\AdminOrderController;
 use App\Controllers\Admin\AdminUserController;
 use App\Controllers\Admin\AdminCategoryController;
+use App\Controllers\Admin\PosController;
 use App\Controllers\WebhookController;
 use App\Middleware\AuthMiddleware;
 use App\Middleware\AdminMiddleware;
@@ -76,6 +77,20 @@ $this->router->delete('/api/admin/categories/{id}',[AdminCategoryController::cla
 $this->router->get('/api/admin/orders',            [AdminOrderController::class, 'index'],  [AuthMiddleware::class, AdminMiddleware::class]);
 $this->router->get('/api/admin/orders/{id}',       [AdminOrderController::class, 'show'],   [AuthMiddleware::class, AdminMiddleware::class]);
 $this->router->patch('/api/admin/orders/{id}/status',[AdminOrderController::class, 'updateStatus'],[AuthMiddleware::class, AdminMiddleware::class]);
+
+// ── POS — Caisse ──────────────────────────────────────────────────────────────
+$this->router->get('/api/admin/pos/recherche',             [PosController::class, 'rechercherProduits'],   [AuthMiddleware::class, AdminMiddleware::class]);
+$this->router->get('/api/admin/pos/produits/{id}/variantes',[PosController::class, 'variantesProduit'],    [AuthMiddleware::class, AdminMiddleware::class]);
+$this->router->post('/api/admin/pos/produits/{id}/variantes',[PosController::class, 'creerVariante'],      [AuthMiddleware::class, AdminMiddleware::class]);
+$this->router->put('/api/admin/pos/variantes/{vid}',        [PosController::class, 'mettreAJourVariante'], [AuthMiddleware::class, AdminMiddleware::class]);
+$this->router->delete('/api/admin/pos/variantes/{vid}',     [PosController::class, 'supprimerVariante'],   [AuthMiddleware::class, AdminMiddleware::class]);
+
+$this->router->get('/api/admin/pos/ventes',                 [PosController::class, 'listerVentes'],        [AuthMiddleware::class, AdminMiddleware::class]);
+$this->router->post('/api/admin/pos/ventes',                [PosController::class, 'creerVente'],          [AuthMiddleware::class, AdminMiddleware::class]);
+$this->router->get('/api/admin/pos/ventes/{id}',            [PosController::class, 'afficherVente'],       [AuthMiddleware::class, AdminMiddleware::class]);
+$this->router->post('/api/admin/pos/ventes/{id}/paiement',  [PosController::class, 'ajouterPaiement'],     [AuthMiddleware::class, AdminMiddleware::class]);
+$this->router->post('/api/admin/pos/ventes/{id}/annuler',   [PosController::class, 'annulerVente'],        [AuthMiddleware::class, AdminMiddleware::class]);
+$this->router->post('/api/admin/pos/ventes/{id}/whatsapp',  [PosController::class, 'genererLienWhatsApp'], [AuthMiddleware::class, AdminMiddleware::class]);
 
 $this->router->get('/api/admin/users',             [AdminUserController::class, 'index'],   [AuthMiddleware::class, AdminMiddleware::class]);
 $this->router->get('/api/admin/users/{id}',        [AdminUserController::class, 'show'],    [AuthMiddleware::class, AdminMiddleware::class]);
